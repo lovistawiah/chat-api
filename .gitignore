@@ -1,0 +1,5 @@
+.env 
+node_modules
+controllers/allData.js
+controllers/utils.js
+package-lock.json
