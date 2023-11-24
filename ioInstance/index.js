@@ -2,11 +2,7 @@ const { Server } = require("socket.io");
 const { authenticateSocket } = require("../Middleware/userAuth");
 const {
   getChannels,
-  newChannel,
-  offlineIndicator,
-  typing,
-  askUserStatus,
-  onlineIndicator,
+  newChannel
 } = require("../controllers/Channel");
 const {
   createMessage,
@@ -25,6 +21,7 @@ const io = new Server({
   },
 });
 io.use(authenticateSocket);
+
 io.on("connection", (socket) => {
   socket.join(socket.decoded.userId);
   socket.userId = socket.decoded.userId;

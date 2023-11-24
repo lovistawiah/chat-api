@@ -1,27 +1,10 @@
 const Channel = require("../models/Channel");
 const User = require("../models/Users");
-
-const channelEvents = {
-  channelAndLastMessage: "channelAndLastMessage",
-  addNewChat: "addNewChat",
-  search: "search",
-  displayNewChats: "displayNewChats",
-};
-const userEvents = {
-  status: "status",
-  typing: "typing",
-};
-
-//TODO:
-// GET CHANNEL AND LAST MESSAGE
-//GET SINGLE CHANNEL
-// POST CHANNEL, THUS ADD FRIEND OR CREATE GROUP
-// DELETE GROUP
+const { channelEvents } = require("../utils");
 
 const getChannels = async (socket) => {
   let message = "";
   try {
-    //userId comes the middleware userAuth.js
     const { userId } = socket.decoded;
     const userChannels = await Channel.find({ members: { $in: userId } })
       .populate([
@@ -36,11 +19,11 @@ const getChannels = async (socket) => {
       ])
       .select(["username", "messages"]);
     if (userChannels.length == 0) {
-        const message = 'no channels found'
-        socket.emit(channelEvents.channelAndLastMessage,message)
-        return
-    };
-// sorting and return the channel's last message with the latest date
+      const message = "no channels found";
+      socket.emit(channelEvents.channelAndLastMessage, message);
+      return;
+    }
+    // sorting and return the channel's last message with the latest date
     userChannels.sort((channelA, channelB) => {
       const lastMessageA = channelA.messages[channelA.messages.length - 1];
       const lastMessageB = channelB.messages[channelB.messages.length - 1];
@@ -48,13 +31,12 @@ const getChannels = async (socket) => {
         new Date(lastMessageB.createdAt) - new Date(lastMessageA.createdAt)
       );
     });
-    const channelAndLastMessage = [];
 
-    userChannels.forEach((channel) => {
+    const channelAndLastMessage = userChannels.map((channel) => {
       const { members, messages } = channel;
-      members.forEach((member) => {
-        if (member._id.toString() != userId) {
 
+      return members.map((member) => {
+        if (member._id.toString() != userId) {
           const userInfo = {
             userId: member._id,
             username: member.username,
@@ -72,11 +54,11 @@ const getChannels = async (socket) => {
             createdAt: lastMessageDetails.createdAt,
           };
 
-          channelAndLastMessage.push({
+          return {
             channelInfo,
             userInfo,
             messageInfo,
-          });
+          };
         }
       });
     });
@@ -86,7 +68,6 @@ const getChannels = async (socket) => {
     console.log(message);
   }
 };
-
 
 const createChannel = async (members) => {
   try {
@@ -127,7 +108,6 @@ const findChannel = async (channelId) => {
   }
 };
 
-// return a list of new users who are not added to a channel for the user logged in
 const newChannel = (socket) => {
   socket.on(channelEvents.search, async (searchValue) => {
     const { userId } = socket.decoded;
@@ -169,89 +149,9 @@ const newChannel = (socket) => {
   });
 };
 
-async function offlineIndicator(io, socket) {
-  try {
-    const { userId } = socket.decoded;
-
-    socket.on("disconnect", async () => {
-      const status = new Date();
-      await User.findByIdAndUpdate(userId, { lastSeen: status }, { new: true });
-      const channels = await Channel.find({ members: { $in: userId } });
-      channels.forEach((channel) => {
-        const members = channel.members;
-        members.forEach((member) => {
-          const memberId = member._id.toString();
-          if (memberId != userId) {
-            io.to(memberId).emit(userEvents.status, { userId, status });
-          }
-        });
-      });
-    });
-  } catch (err) {
-    console.log(err);
-  }
-}
-
-const onlineIndicator = async (socket, io) => {
-  try {
-    const status = "online";
-    const { userId } = socket.decoded;
-    await User.findByIdAndUpdate(userId, { lastSeen: status }, { new: true });
-    const channels = await Channel.find({ members: { $in: userId } });
-    channels.forEach((channel) => {
-      const members = channel.members;
-      members.forEach((member) => {
-        const memberId = member._id.toString();
-        if (memberId != userId) {
-          io.to(memberId).emit(userEvents.status, { userId, status });
-        }
-      });
-    });
-  } catch (err) {
-    console.log(err);
-  }
-};
-
-const askUserStatus = (socket) => {
-  socket.on(userEvents.status, async (data) => {
-    const userId = data;
-    const userFound = await User.findById(userId);
-    if (!userFound) return;
-    const status = userFound.lastSeen;
-    socket.emit(userEvents.status, { status, userId });
-  });
-};
-
-const typing = (socket) => {
-  socket.on(userEvents.typing, async (data) => {
-    try {
-      let receiver;
-      const { channelId, userId } = data;
-      const channelMembers = await findChannel(channelId);
-      if (!channelMembers) return;
-
-      channelMembers.forEach((member) => {
-        if (member._id.toString() != socket.userId) {
-          receiver = member._id.toString();
-        }
-      });
-      const message = "typing...";
-      socket
-        .to(receiver)
-        .emit(userEvents.typing, { message, channelId, userId });
-    } catch (err) {
-      console.log(err);
-    }
-  });
-};
-
 module.exports = {
   newChannel,
   getChannels,
   createChannel,
   findChannel,
-  offlineIndicator,
-  onlineIndicator,
-  askUserStatus,
-  typing,
 };

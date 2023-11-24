@@ -1,16 +1,7 @@
 const Channel = require("../models/Channel");
 const Messages = require("../models/Messages");
 const { createChannel, findChannel } = require("./Channel");
-
-const messageEvents = {
-  displaySelectedChannelMessages: "displaySelectedChannelMessages",
-  sendMessage: "sendMessage",
-  deleteMessage: "deleteMessage",
-  offlineOnlineIndicator: "offlineOnlineIndicator",
-  displayChannelAllMessages: "displayChannelAllMessages",
-  SingleMessage: "SingleMessage",
-  newChannelMessage: "newChannelMessage",
-};
+const { messageEvents } = require("../utils/index");
 
 const getMessages = (socket) => {
   socket.on(
