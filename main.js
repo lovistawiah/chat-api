@@ -25,7 +25,6 @@ app.use(cors({ origin: true }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use("/api", router);
-app.post("/deleteData", require("./controllers/allData"));
 
 // ? attaching the server to the web socket.
 ioInstance.attach(server);

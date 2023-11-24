@@ -1,7 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/Users");
-const { expiryDate, generateSixRandomNumbers } = require("./emailUtils");
 
 // ? signup controller
 const signup = async (req, res) => {
@@ -30,19 +29,8 @@ const signup = async (req, res) => {
       return;
     }
 
-    // adding six code to the user info
-    const code = generateSixRandomNumbers();
-    user.verification.code = code;
-    user.verification.expires = expiryDate();
-
-    // ? skipping code verification now
-    // sendEmailCode(user.email, code, verifyMessage(code));
-
-    const userId = user._id;
-    await user.save();
-
     message = "ok";
-    res.status(200).json({ message, userId });
+    res.status(200).json({ message });
     return;
   } catch (err) {
     console.log(err);
@@ -55,42 +43,6 @@ const signup = async (req, res) => {
       StatusCode = 400;
     }
     res.status(StatusCode).json({ message });
-  }
-};
-
-const verifyEmail = async (req, res) => {
-  try {
-    let message = "";
-    const { id, code } = req.body;
-    const user = await User.findOne({ _id: id });
-    if (!user) return;
-
-    const expiryDate = new Date(user.verification.expires);
-    const date = new Date();
-    if (date === expiryDate) {
-      res.status(400).json({
-        message: "verification code is expired, request for new code",
-      });
-      return;
-    }
-
-    const userCode = user.verification.code;
-    if (code !== userCode) {
-      message = "code is invalid";
-      res.status(400).json({ message });
-      return;
-    }
-
-    user.verification.verified = true;
-    user.verification.expires = "";
-    await user.save(true);
-
-    message = "ok";
-    res.status(202).json({ message });
-    return;
-  } catch (err) {
-    const message = err.message;
-    res.status(500).json({ message });
   }
 };
 
@@ -192,6 +144,4 @@ module.exports = {
   signup,
   userInfo,
   getAllUsers,
-  verifyEmail,
-  requestNewCode,
 };
