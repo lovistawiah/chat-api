@@ -15,7 +15,7 @@ const signup = async (req, res) => {
 
     if (password !== confirmPassword) {
       message = "passwords do not match";
-      res.status(400).json({ message });
+      res.status(401).json({ message });
       return;
     }
 
@@ -25,7 +25,7 @@ const signup = async (req, res) => {
 
     if (!user) {
       message = "account cannot be created, try again later";
-      res.status(400).json({ message });
+      res.status(401).json({ message });
       return;
     }
 
@@ -49,12 +49,11 @@ const signup = async (req, res) => {
 //? login controller
 const login = async (req, res) => {
   let message = "";
-  let verifiedMessage = true;
   try {
     const { usernameEmail, password } = req.body;
     if (!usernameEmail || !password) {
       message = "username, email or password required";
-      res.status(400).json({ message });
+      res.status(401).json({ message });
       return;
     }
     const user = await User.findOne({
@@ -63,14 +62,14 @@ const login = async (req, res) => {
     // handle if no user exists
     if (!user) {
       message = `${usernameEmail} does not exist`;
-      res.status(400).json({ message });
+      res.status(401).json({ message });
       return;
     }
 
     const comparePassword = await bcrypt.compare(password, user.password);
     if (!comparePassword) {
       message = "incorrect password";
-      res.status(400).json({ message });
+      res.status(401).json({ message });
       return;
     }
     const token = jwt.sign(
@@ -80,10 +79,6 @@ const login = async (req, res) => {
         expiresIn: "30d",
       }
     );
-    if (!user.verification.verified) {
-      verifiedMessage = false;
-    }
-    res.cookie("authToken", token, { httpOnly: true, secure: true });
     res.status(200).json({ message: "ok", token });
     return;
   } catch (err) {
