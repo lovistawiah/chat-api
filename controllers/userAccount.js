@@ -105,43 +105,8 @@ const userInfo = async (req, res) => {
   }
 };
 
-const requestNewCode = async (req, res) => {
-  let message = "";
-  const { id } = req.body;
-  if (!id) {
-    message = "user identification does not exist";
-    res.status(400).json({ message });
-    return;
-  }
-  const user = await User.findOne({ _id: id });
-
-  if (!user) {
-    res.status(400).json({ message: "user does not exist" });
-    return;
-  }
-  const newCode = generateSixRandomNumbers();
-  user.verification.code = newCode;
-  user.verification.expires = expiryDate();
-  sendEmailCode(
-    process.env.GMAIL_CLIENT,
-    user.email,
-    newCode,
-    verifyMessage(newCode)
-  );
-};
-
-const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.status(200).json({ users });
-  } catch (e) {
-    console.log(e);
-  }
-};
-
 module.exports = {
   login,
   signup,
   userInfo,
-  getAllUsers,
 };

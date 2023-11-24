@@ -1,6 +1,5 @@
 require("dotenv").config();
 const express = require("express");
-const cookieParser = require("cookie-parser");
 require("dotenv").config();
 const cors = require("cors");
 
@@ -20,7 +19,6 @@ const server = http.createServer(app); // Attach Express app to the HTTP server
 const MONGO_URI = process.env.MONGO_URI;
 
 app.use(morgan("dev"));
-app.use(cookieParser());
 app.use(cors({ origin: true }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
