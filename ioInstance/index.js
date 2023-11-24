@@ -1,9 +1,6 @@
 const { Server } = require("socket.io");
 const { authenticateSocket } = require("../Middleware/userAuth");
-const {
-  getChannels,
-  searchChannels
-} = require("../controllers/Channel");
+const { getChannels, searchChannels } = require("../controllers/channel");
 const {
   createMessage,
   getMessages,

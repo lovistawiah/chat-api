@@ -1,6 +1,6 @@
 const Channel = require("../models/Channel");
 const Messages = require("../models/Messages");
-const { createChannel, findOrCreateChannel } = require("./Channel");
+const { createChannel, findOrCreateChannel } = require("./channel");
 const { messageEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
 
