@@ -1,7 +1,7 @@
 const userEvents = {
   status: "status",
   typing: "typing",
- userErrorMessage:"userErrorMessage"
+  userErrorMessage: "userErrorMessage",
 };
 
 const channelEvents = {
@@ -9,6 +9,7 @@ const channelEvents = {
   addNewChat: "addNewChat",
   search: "search",
   displayNewChats: "displayNewChats",
+  errorMessage: "errorMessage",
 };
 
 const messageEvents = {
@@ -19,6 +20,7 @@ const messageEvents = {
   displayChannelAllMessages: "displayChannelAllMessages",
   SingleMessage: "SingleMessage",
   newChannelMessage: "newChannelMessage",
+  errorMessage: "errorMessage",
 };
 
 module.exports = {

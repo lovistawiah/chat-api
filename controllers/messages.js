@@ -1,7 +1,8 @@
 const Channel = require("../models/Channel");
 const Messages = require("../models/Messages");
-const { createChannel, findChannel } = require("./Channel");
+const { createChannel, findOrCreateChannel } = require("./Channel");
 const { messageEvents } = require("../utils/index");
+const { socketError } = require("../ioInstance/socketError");
 
 const getMessages = (socket) => {
   socket.on(
@@ -42,8 +43,11 @@ const createMessage = async (io, socket) => {
   let messageReceivers = [];
   socket.on(messageEvents.sendMessage, async ({ message, channelId }) => {
     try {
-      const channelMembers = await findChannel(channelId);
-      if (!channelMembers) return;
+      const channelMembers = await findOrCreateChannel(channelId);
+      if (channelMembers instanceof Error) {
+        const message = channelMembers.message;
+        socketError(socket, messageEvents.errorMessage, message);
+      }
       messageReceivers = addMembers(channelMembers);
       newMessage(
         channelId,
@@ -60,7 +64,7 @@ const createMessage = async (io, socket) => {
   });
 };
 
-function createNewChannelMessage(socket, io) {
+function createNewChannelAndMessage(socket, io) {
   const loggedUserId = socket.decoded.userId;
   let messageReceivers = [];
   socket.on(messageEvents.newChannelMessage, async ({ userId, message }) => {
@@ -72,20 +76,27 @@ function createNewChannelMessage(socket, io) {
       return;
     }
     messageReceivers = addMembers(channelMembers);
-    newMessage(channelId, loggedUserId, message, messageReceivers, socket, io);
+    newMessageAndSend(
+      channelId,
+      loggedUserId,
+      message,
+      messageReceivers,
+      socket,
+      io
+    );
     return;
   });
 }
 
 function addMembers(channelMembers) {
-  const members = channelMembers.map((channelMember) => {
+  const members = channelMembers?.map((channelMember) => {
     const memberId = channelMember._id.toString();
     return memberId;
   });
   return members;
 }
 
-async function newMessage(
+async function newMessageAndSend(
   channelId,
   loggedUserId,
   message,
@@ -107,18 +118,19 @@ async function newMessage(
       channelId,
     };
     messageReceivers.forEach((receiver) => {
-      io.to(receiver).emit(messageEvents.SingleMessage, messageEdited);
+      io.to(receiver).volatile.emit(messageEvents.SingleMessage, messageEdited);
     });
     await Channel.findByIdAndUpdate(channelId, {
       $push: { messages: messageCreated._id },
     });
   } catch (e) {
-    console.log(e);
+    const message = e.message;
+    socketError(socket, messageEvents.errorMessage, message);
   }
 }
 
 module.exports = {
   getMessages,
   createMessage,
-  createNewChannelMessage,
+  createNewChannelAndMessage,
 };

@@ -2,12 +2,13 @@ const { Server } = require("socket.io");
 const { authenticateSocket } = require("../Middleware/userAuth");
 const {
   getChannels,
-  newChannel
+  searchChannels
 } = require("../controllers/Channel");
 const {
   createMessage,
   getMessages,
-  createNewChannelMessage,
+
+  createNewChannelAndMessage,
 } = require("../controllers/messages");
 
 const io = new Server({
@@ -33,13 +34,12 @@ io.on("connection", (socket) => {
   //from controller/messages.js
   createMessage(io, socket);
   getMessages(socket);
-  createNewChannelMessage(socket, io);
+  createNewChannelAndMessage(socket, io);
 });
 io.on("connection", (socket) => {
   //from controller/channel.js
   getChannels(socket);
-  newChannel(socket);
-  typing(socket);
+  searchChannels(socket);
   askUserStatus(socket);
 });
 

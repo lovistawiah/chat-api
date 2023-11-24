@@ -1,3 +1,4 @@
+const { socketError } = require("../ioInstance/socketError");
 const Channel = require("../models/Channel");
 const User = require("../models/Users");
 const { channelEvents } = require("../utils");
@@ -65,50 +66,33 @@ const getChannels = async (socket) => {
     socket.emit(channelEvents.channelAndLastMessage, channelAndLastMessage);
   } catch (err) {
     message = err.message;
-    console.log(message);
+    socketError(socket, channelEvents.errorMessage, message);
   }
 };
 
-const createChannel = async (members) => {
+const findOrCreateChannel = async (members) => {
   try {
-    const createdChannel = await Channel.findOne({ members: members });
-    if (createdChannel) {
+    const existingChannel = await Channel.findOne({ members: members });
+
+    if (existingChannel) {
       return {
-        channelId: createdChannel._id,
-        channelMembers: createdChannel.members,
+        channelId: existingChannel._id,
+        channelMembers: existingChannel.members,
       };
     }
-
-    const newChannelCreated = await Channel.create({ members });
-    if (!newChannelCreated) return;
-
-    newChannelCreated.members.forEach(async (member) => {
-      await User.findByIdAndUpdate(member._id, {
-        $push: { channels: newChannelCreated._id },
-      });
-    });
-
+    const createdChannelObj = await createNewChanel(members);
+    if(!createdChannelObj) return;
     return {
-      channelId: newChannelCreated._id,
-      channelMembers: newChannelCreated.members,
+      channelId: createdChannelObj.channelId,
+      channelMembers: createdChannelObj.members,
     };
   } catch (err) {
-    console.log(err);
+    const message = err.message;
+    return new Error(message);
   }
 };
 
-const findChannel = async (channelId) => {
-  try {
-    const findChannel = await Channel.findById(channelId);
-    if (!findChannel) return;
-
-    return findChannel.members;
-  } catch (err) {
-    console.log(err);
-  }
-};
-
-const newChannel = (socket) => {
+const searchChannels = (socket) => {
   socket.on(channelEvents.search, async (searchValue) => {
     const { userId } = socket.decoded;
     try {
@@ -121,17 +105,15 @@ const newChannel = (socket) => {
       ) {
         return;
       }
-      const loggedUser = await User.findById(userId)
+      const loggedInUser = await User.findById(userId)
         .populate({
           path: "channels",
           populate: { path: "members", model: "user" },
         })
         .select("channels");
-      const loggedInUserMembers = [];
-      loggedUser.channels.forEach((channel) => {
-        channel.members.forEach((member) =>
-          loggedInUserMembers.push(member._id.toString())
-        );
+      const registeredMembers = [];
+      loggedInUser.channels.forEach((channel) => {
+        channel.members.forEach((member) => registeredMembers.push(member._id));
       });
 
       const newFriends = await User.find({
@@ -139,7 +121,7 @@ const newChannel = (socket) => {
         $and: [
           { _id: { $ne: userId } }, //$ne - not equal
           { username: { $regex: searchValue, $options: "i" } },
-          { _id: { $nin: loggedInUserMembers } }, // $nin - not in specified array
+          { _id: { $nin: registeredMembers } }, // $nin - not in specified array
         ],
       }).select("username");
       socket.emit(channelEvents.displayNewChats, newFriends);
@@ -149,9 +131,24 @@ const newChannel = (socket) => {
   });
 };
 
+const createNewChanel = async (members) => {
+  const newChannel = await Channel.create({ members });
+  if (!newChannel) return;
+
+  newChannel.members.forEach(async (member) => {
+    await User.findByIdAndUpdate(member._id, {
+      $push: { channels: newChannel._id },
+    });
+  });
+
+  return {
+    channelId: newChannel._id,
+    members: newChannel.members,
+  };
+};
 module.exports = {
-  newChannel,
   getChannels,
-  createChannel,
-  findChannel,
+  findOrCreateChannel,
+  searchChannels,
+  createNewChanel
 };
