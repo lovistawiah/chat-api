@@ -2,7 +2,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/Users");
 const Channel = require("../models/Channel");
-const { socketError } = require("../ioInstance/socketError");
 const { userEvents } = require("../utils/index");
 
 // ? signup controller
@@ -49,7 +48,6 @@ const signup = async (req, res) => {
   }
 };
 
-
 const login = async (req, res) => {
   let message = "";
   try {
@@ -89,59 +87,50 @@ const login = async (req, res) => {
   }
 };
 
-const userInfo = async (req, res) => {
-  try {
-    let message = "";
-    const userId = req.user.userId;
-    const userDetails = await User.findById(userId).select("username,bio");
-    if (!userDetails) {
-      message = "user does not exist";
-      res.status(401).json({ message });
-      return;
-    }
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
 async function offlineIndicator(io, socket) {
-    const { userId } = socket.decoded;
+  const { userId } = socket.decoded;
 
-    socket.on("disconnect", async () => {
-      const status = new Date();
-      const userFound = await User.findByIdAndUpdate(
-        userId,
-        { lastSeen: status },
-        { new: true }
-      );
-      
-      const channels = await Channel.find({ members: { $in: userId } });
-      channels.forEach((channel) => {
-        const members = channel.members;
-        members.forEach((member) => {
-          const memberId = member._id.toString();
-          if (memberId != userId) {
-            io.to(memberId).volatile.emit(userEvents.status, { userId, status });
-          }
-        });
-      });
-    });
-}
+  socket.on("disconnect", async () => {
+    const status = new Date();
+    const userFound = await User.findByIdAndUpdate(
+      userId,
+      { lastSeen: status },
+      { new: true }
+    );
+    if (!userFound) return;
 
-const onlineIndicator = async (socket, io) => {
-    const status = "online";
-    const { userId } = socket.decoded;
-    await User.findByIdAndUpdate(userId, { lastSeen: status }, { new: true });
-    const channels = await Channel.find({ members: { $in: userId } });
+    const channels = await Channel.find({ members: { $in: userFound._id } });
     channels.forEach((channel) => {
       const members = channel.members;
       members.forEach((member) => {
         const memberId = member._id.toString();
         if (memberId != userId) {
-          io.to(memberId).emit(userEvents.status, { userId, status });
+          io.to(memberId).volatile.emit(userEvents.status, { userId, status });
         }
       });
     });
+  });
+}
+
+const onlineIndicator = async (socket, io) => {
+  const status = "online";
+  const { userId } = socket.decoded;
+  const userFound = await User.findByIdAndUpdate(
+    userId,
+    { lastSeen: status },
+    { new: true }
+  );
+  if (!userFound) return;
+  const channels = await Channel.find({ members: { $in: userFound._id } });
+  channels.forEach((channel) => {
+    const members = channel.members;
+    members.forEach((member) => {
+      const memberId = member._id.toString();
+      if (memberId != userId) {
+        io.to(memberId).volatile.emit(userEvents.status, { userId, status });
+      }
+    });
+  });
 };
 
 const userStatus = (socket) => {
@@ -156,31 +145,29 @@ const userStatus = (socket) => {
 
 const typing = (socket) => {
   socket.on(userEvents.typing, async (data) => {
-  
-      let receiver;
-      const { channelId, userId } = data;
-      const channelMembers = await findChannel(channelId);
-      if (!channelMembers) return;
+    let receiver;
+    const { channelId, userId } = data;
+    const channelMembers = await findChannel(channelId);
+    if (!channelMembers) return;
 
-      channelMembers.forEach((member) => {
-        if (member._id.toString() != socket.userId) {
-          receiver = member._id.toString();
-        }
-      });
+    channelMembers.forEach((member) => {
+      if (member._id.toString() != socket.userId) {
+        receiver = member._id.toString();
+      }
+    });
 
-      const message = "typing...";
-      socket
-        .to(receiver)
-        .emit(userEvents.typing, { message, channelId, userId });
+    const message = "typing...";
+    socket
+      .to(receiver)
+      .volatile.emit(userEvents.typing, { message, channelId, userId });
   });
 };
 
 module.exports = {
   login,
   signup,
-  userInfo,
   offlineIndicator,
   onlineIndicator,
   typing,
-  userStatus
+  userStatus,
 };

@@ -1,7 +1,7 @@
 const userEvents = {
   status: "status",
   typing: "typing",
-  offlineOnlineIndicatorError: "offlineOnlineIndicatorError",
+ userErrorMessage:"userErrorMessage"
 };
 
 const channelEvents = {
