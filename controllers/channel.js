@@ -70,22 +70,15 @@ const getChannels = async (socket) => {
   }
 };
 
-const findOrCreateChannel = async (members) => {
+const findChannel = async (channelId) => {
   try {
-    const existingChannel = await Channel.findOne({ members: members });
-
+    const existingChannel = await Channel.findById(channelId);
     if (existingChannel) {
       return {
         channelId: existingChannel._id,
         channelMembers: existingChannel.members,
       };
     }
-    const createdChannelObj = await createNewChanel(members);
-    if (!createdChannelObj) return;
-    return {
-      channelId: createdChannelObj.channelId,
-      channelMembers: createdChannelObj.members,
-    };
   } catch (err) {
     const message = err.message;
     return new Error(message);
@@ -126,29 +119,37 @@ const searchChannels = (socket) => {
       }).select("username");
       socket.emit(channelEvents.search, newFriends);
     } catch (err) {
-      const message = err.message
-      socketError(socket,channelEvents.errorMessage,message)
+      const message = err.message;
+      socketError(socket, channelEvents.errorMessage, message);
     }
   });
 };
 
 const createNewChanel = async (members) => {
-  const newChannel = await Channel.create({ members });
-  if (!newChannel) return;
+  const findChannel = await Channel.findOne({ members: members });
+  if (findChannel) {
+    return {
+      channelId: findChannel._id,
+      channelMembers: findChannel.members,
+    };
+  } else {
+    const newChannel = await Channel.create({ members });
+    if (!newChannel) return;
 
-  newChannel.members.forEach(async (member) => {
-    await User.findByIdAndUpdate(member._id, {
-      $push: { channels: newChannel._id },
+    newChannel.members.forEach(async (member) => {
+      await User.findByIdAndUpdate(member._id, {
+        $push: { channels: newChannel._id },
+      });
     });
-  });
-
-  return {
-    channelId: newChannel._id,
-    channelMembers: newChannel.members,
-  };
+    return {
+      channelId: newChannel._id,
+      channelMembers: newChannel.members,
+    };
+  }
 };
 module.exports = {
   getChannels,
-  findOrCreateChannel,
+  findChannel,
+  createNewChanel,
   searchChannels,
 };

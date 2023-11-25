@@ -16,9 +16,7 @@ const messageEvents = {
   sendMessage: "sendMessage",
   deleteMessage: "deleteMessage",
   offlineOnlineIndicator: "offlineOnlineIndicator",
-  displayChannelAllMessages: "displayChannelAllMessages",
-  SingleMessage: "SingleMessage",
-  newChannelMessage: "newChannelMessage",
+  displayChannelMessages: "displayChannelMessages",
   errorMessage: "errorMessage",
 };
 

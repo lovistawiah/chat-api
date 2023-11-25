@@ -7,7 +7,11 @@ const {
 
   createNewChannelAndMessage,
 } = require("../controllers/messages");
-const { offlineIndicator, onlineIndicator, userStatus } = require("../controllers/userAccount");
+const {
+  offlineIndicator,
+  onlineIndicator,
+  userStatus,
+} = require("../controllers/userAccount");
 
 const io = new Server({
   cors: {
@@ -24,7 +28,7 @@ io.use(authenticateSocket);
 io.on("connection", (socket) => {
   socket.join(socket.decoded.userId);
   socket.userId = socket.decoded.userId;
-  userStatus(socket)
+  userStatus(socket);
   offlineIndicator(io, socket);
   onlineIndicator(socket, io);
 });
@@ -33,7 +37,7 @@ io.on("connection", (socket) => {
   //from controller/messages.js
   createMessage(io, socket);
   getMessages(socket);
-  createNewChannelAndMessage(socket, io);
+  createNewChannelAndMessage(socket);
 });
 io.on("connection", (socket) => {
   //from controller/channel.js
