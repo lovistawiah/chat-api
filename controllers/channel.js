@@ -126,7 +126,8 @@ const searchChannels = (socket) => {
       }).select("username");
       socket.emit(channelEvents.search, newFriends);
     } catch (err) {
-      console.log(err);
+      const message = err.message
+      socketError(socket,channelEvents.errorMessage,message)
     }
   });
 };

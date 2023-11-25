@@ -31,8 +31,9 @@ const getMessages = (socket) => {
         });
 
         callback(messages);
-      } catch (error) {
-        console.log(error);
+      } catch (err) {
+        const message = err.message
+        socketError(socket, messageEvents.errorMessage,message);
       }
     }
   );
@@ -59,7 +60,8 @@ const createMessage = async (io, socket) => {
       );
       return;
     } catch (err) {
-      console.log(err);
+      const message = err.message;
+      socketError(socket, messageEvents.errorMessage, message);
     }
   });
 };

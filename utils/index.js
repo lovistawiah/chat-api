@@ -1,7 +1,7 @@
 const userEvents = {
   status: "status",
   typing: "typing",
-  userErrorMessage: "userErrorMessage",
+  errorMessage: "errorMessage",
 };
 
 const channelEvents = {
