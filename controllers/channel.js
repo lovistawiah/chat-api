@@ -81,7 +81,7 @@ const findOrCreateChannel = async (members) => {
       };
     }
     const createdChannelObj = await createNewChanel(members);
-    if(!createdChannelObj) return;
+    if (!createdChannelObj) return;
     return {
       channelId: createdChannelObj.channelId,
       channelMembers: createdChannelObj.members,
@@ -124,7 +124,7 @@ const searchChannels = (socket) => {
           { _id: { $nin: registeredMembers } }, // $nin - not in specified array
         ],
       }).select("username");
-      socket.emit(channelEvents.displayNewChats, newFriends);
+      socket.emit(channelEvents.search, newFriends);
     } catch (err) {
       console.log(err);
     }
@@ -143,12 +143,11 @@ const createNewChanel = async (members) => {
 
   return {
     channelId: newChannel._id,
-    members: newChannel.members,
+    channelMembers: newChannel.members,
   };
 };
 module.exports = {
   getChannels,
   findOrCreateChannel,
   searchChannels,
-  createNewChanel
 };

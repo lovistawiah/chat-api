@@ -6,7 +6,6 @@ const userEvents = {
 
 const channelEvents = {
   channelAndLastMessage: "channelAndLastMessage",
-  addNewChat: "addNewChat",
   search: "search",
   displayNewChats: "displayNewChats",
   errorMessage: "errorMessage",

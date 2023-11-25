@@ -1,6 +1,6 @@
 const Channel = require("../models/Channel");
 const Messages = require("../models/Messages");
-const { createChannel, findOrCreateChannel } = require("./channel");
+const { findOrCreateChannel } = require("./channel");
 const { messageEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
 
@@ -49,7 +49,7 @@ const createMessage = async (io, socket) => {
         socketError(socket, messageEvents.errorMessage, message);
       }
       messageReceivers = addMembers(channelMembers);
-      newMessage(
+      newMessageAndSend(
         channelId,
         loggedUserId,
         message,
@@ -64,6 +64,7 @@ const createMessage = async (io, socket) => {
   });
 };
 
+// in use when members do not have common channelId
 function createNewChannelAndMessage(socket, io) {
   const loggedUserId = socket.decoded.userId;
   let messageReceivers = [];
@@ -71,11 +72,11 @@ function createNewChannelAndMessage(socket, io) {
     // userId is the other user's Id that appears on the page.
     const members = [loggedUserId, userId];
 
-    const { channelId, channelMembers } = await createChannel(members);
-    if (!channelId || !channelMembers) {
+    const { channelId, ChannelMembers } = await findOrCreateChannel(members);
+    if (!channelId || !ChannelMembers) {
       return;
     }
-    messageReceivers = addMembers(channelMembers);
+    messageReceivers = addMembers(ChannelMembers);
     newMessageAndSend(
       channelId,
       loggedUserId,
@@ -118,7 +119,7 @@ async function newMessageAndSend(
       channelId,
     };
     messageReceivers.forEach((receiver) => {
-      io.to(receiver).volatile.emit(messageEvents.SingleMessage, messageEdited);
+      io.to(receiver).emit(messageEvents.SingleMessage, messageEdited);
     });
     await Channel.findByIdAndUpdate(channelId, {
       $push: { messages: messageCreated._id },
