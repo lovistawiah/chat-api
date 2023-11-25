@@ -76,7 +76,7 @@ function createNewChannelAndMessage(socket, io) {
     if (!channelId || !ChannelMembers) {
       return;
     }
-    messageReceivers = addMembers(ChannelMembers);
+    messageReceivers = addMembers(newChannelMembers);
     newMessageAndSend(
       channelId,
       loggedUserId,
