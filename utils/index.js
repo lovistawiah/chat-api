@@ -12,7 +12,6 @@ const channelEvents = {
 };
 
 const messageEvents = {
-  displaySelectedChannelMessages: "displaySelectedChannelMessages",
   sendMessage: "sendMessage",
   deleteMessage: "deleteMessage",
   offlineOnlineIndicator: "offlineOnlineIndicator",

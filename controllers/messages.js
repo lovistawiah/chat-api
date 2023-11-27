@@ -7,101 +7,97 @@ const { socketError } = require("../ioInstance/socketError");
 const getMessages = (socket) => {
   socket.on(messageEvents.displayChannelMessages, async ({ channelId }) => {
     //using the channelId to retrieve the all the messages in a particular channel
-    console.log(channelId);
-    // try {
-    //   const channelMessages = await Channel.findOne({
-    //     _id: channelId,
-    //   }).populate({
-    //     path: "messages",
-    //   });
-    //   const messages = [];
-    //   channelMessages.messages.forEach((messageData) => {
-    //     let { isDeleted, message, sender, createdAt, _id } = messageData;
-
-    //     if (isDeleted) {
-    //       message = "this message was deleted";
-    //     }
-    //     messages.push({
-    //       _id,
-    //       message,
-    //       sender,
-    //       createdAt,
-    //     });
-    //   });
-
-    //   callback(messages);
-    // } catch (err) {
-    //   const message = err.message;
-    //   socketError(socket, messageEvents.errorMessage, message);
-    // }
-  });
-};
-// TODO: 1. make  createMessage: accept channelId or other userId
-const createMessage = async (io, socket) => {
-  const loggedUserId = socket.decoded.userId;
-  let messageReceivers = [];
-  socket.on(messageEvents.sendMessage, async ({ message, channelId }) => {
+  
     try {
-      const channelMembers = await findChannel(channelId);
-      if (channelMembers instanceof Error) {
-        const message = channelMembers.message;
-        socketError(socket, messageEvents.errorMessage, message);
-      } else if (channelMembers == undefined) {
-        const message = "unknown error";
-        socketError(socket, messageEvents.errorMessage, message);
-      } else {
-        messageReceivers = addMembers(channelMembers);
-        newMessageAndSend(
-          channelId,
-          loggedUserId,
+      const channelMessages = await Channel.findOne({
+        _id: channelId,
+      }).populate({
+        path: "messages",
+      });
+      const messages = [];
+      channelMessages.messages.forEach((messageData) => {
+        let { isDeleted, message, sender, createdAt, _id } = messageData;
+
+        if (isDeleted) {
+          message = "this message was deleted";
+        }
+        messages.push({
+          _id,
           message,
-          messageReceivers,
-          socket,
-          io
-        );
-      }
-      return;
+          sender,
+          createdAt,
+        });
+      });
+
+      socket.emit(messageEvents.displayChannelMessages,messages)
     } catch (err) {
       const message = err.message;
       socketError(socket, messageEvents.errorMessage, message);
     }
   });
 };
-
-// in use when members do not have common channelId
-function createNewChannelAndMessage(socket, io) {
+const createMessage = async (io, socket) => {
   const loggedUserId = socket.decoded.userId;
   let messageReceivers = [];
-  socket.on(messageEvents.newChannelMessage, async ({ userId, message }) => {
-    // userId is the other user's Id that appears on the page.
-    const members = [loggedUserId, userId];
+  let channelMembers = {};
 
-    const { channelId, channelMembers } = await createNewChanel(members);
-    if (!channelId || !channelMembers) {
-      return;
+  socket.on(
+    messageEvents.sendMessage,
+    async ({ message, channelId, otherUserId }) => {
+
+      // existing channelId
+      if (!message) return;
+      if (channelId) {
+        const existingChannelMembers = await findChannel(channelId);
+
+        if (existingChannelMembers instanceof Error) {
+          const message = existingChannelMembers.message;
+          socketError(socket, messageEvents.errorMessage, message);
+        } else if (existingChannelMembers == undefined) {
+          const message = "unknown error";
+          socketError(socket, messageEvents.errorMessage, message);
+        } else {
+          channelMembers = existingChannelMembers.channelMembers;
+          channelId  = existingChannelMembers.channelId
+        }
+      } else if (otherUserId) {
+        console.log('here')
+        const newMembers = [loggedUserId, otherUserId];
+        const newChannelMembers = await createNewChanel(newMembers);
+        if (newChannelMembers) {
+          channelMembers = newChannelMembers.channelMembers;
+          channelId = newChannelMembers.channelId
+        }
+        //
+      } else {
+        // unknown error
+        const message = "unknown error";
+        socketError(socket, messageEvents.errorMessage, message);
+      }
+
+      messageReceivers = addMembers(channelMembers);
+      newMessageAndSend(
+        socket,
+        channelId,
+        loggedUserId,
+        message,
+        messageReceivers,
+        socket,
+        io
+      );
     }
-    messageReceivers = addMembers(channelMembers);
-    newMessageAndSend(
-      channelId,
-      loggedUserId,
-      message,
-      messageReceivers,
-      socket,
-      io
-    );
-    return;
-  });
-}
+  );
+};
 
 function addMembers(channelMembers) {
-  const members = channelMembers?.map((channelMember) => {
-    const memberId = channelMember._id.toString();
-    return memberId;
-  });
-  return members;
+if(!Array.isArray(channelMembers)) return;
+return channelMembers.map(channelMember => {
+  return channelMember._id.toString();
+})
 }
 
 async function newMessageAndSend(
+  socket,
   channelId,
   loggedUserId,
   message,
@@ -123,12 +119,13 @@ async function newMessageAndSend(
       channelId,
     };
     messageReceivers.forEach((receiver) => {
-      io.to(receiver).emit(messageEvents.SingleMessage, messageEdited);
+      io.to(receiver).emit(messageEvents.sendMessage, messageEdited);
     });
     await Channel.findByIdAndUpdate(channelId, {
       $push: { messages: messageCreated._id },
     });
   } catch (e) {
+    console.log(e.message)
     const message = e.message;
     socketError(socket, messageEvents.errorMessage, message);
   }
@@ -137,5 +134,4 @@ async function newMessageAndSend(
 module.exports = {
   getMessages,
   createMessage,
-  createNewChannelAndMessage
 };

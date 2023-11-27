@@ -37,7 +37,6 @@ io.on("connection", (socket) => {
   //from controller/messages.js
   createMessage(io, socket);
   getMessages(socket);
-  createNewChannelAndMessage(socket);
 });
 io.on("connection", (socket) => {
   //from controller/channel.js

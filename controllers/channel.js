@@ -4,6 +4,7 @@ const User = require("../models/Users");
 const { channelEvents } = require("../utils");
 
 const getChannels = async (socket) => {
+  const channelAndLastMessage = [];
   let message = "";
   try {
     const { userId } = socket.decoded;
@@ -33,10 +34,10 @@ const getChannels = async (socket) => {
       );
     });
 
-    const channelAndLastMessage = userChannels.map((channel) => {
+    userChannels.map((channel) => {
       const { members, messages } = channel;
 
-      return members.map((member) => {
+      members.forEach((member) => {
         if (member._id.toString() != userId) {
           const userInfo = {
             userId: member._id,
@@ -55,15 +56,17 @@ const getChannels = async (socket) => {
             createdAt: lastMessageDetails.createdAt,
           };
 
-          return {
+          channelAndLastMessage.push({
             channelInfo,
             userInfo,
             messageInfo,
-          };
+          });
         }
       });
     });
-    socket.emit(channelEvents.channelAndLastMessage, channelAndLastMessage);
+    if (channelAndLastMessage) {
+      socket.emit(channelEvents.channelAndLastMessage, channelAndLastMessage);
+    }
   } catch (err) {
     message = err.message;
     socketError(socket, channelEvents.errorMessage, message);
@@ -135,7 +138,7 @@ const createNewChanel = async (members) => {
   } else {
     const newChannel = await Channel.create({ members });
     if (!newChannel) return;
-
+    console.log(newChannel, 18);
     newChannel.members.forEach(async (member) => {
       await User.findByIdAndUpdate(member._id, {
         $push: { channels: newChannel._id },
