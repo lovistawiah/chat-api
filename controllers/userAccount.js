@@ -1,5 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+
+
 const User = require("../models/Users");
 const Channel = require("../models/Channel");
 const { userEvents } = require("../utils/index");
@@ -86,6 +88,9 @@ const login = async (req, res) => {
   }
 };
 
+const UpdateProfilePic = async(req,res)=>{
+  console.log(req.file)
+}
 async function offlineIndicator(io, socket) {
   const { userId } = socket.decoded;
 
@@ -169,4 +174,5 @@ module.exports = {
   onlineIndicator,
   typing,
   userStatus,
+  UpdateProfilePic
 };
