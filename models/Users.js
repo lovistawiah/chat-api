@@ -4,7 +4,6 @@ const userSchema = new mongoose.Schema(
   {
     username: {
       type: String,
-      required: true,
       unique: true,
     },
     email: {
@@ -19,6 +18,9 @@ const userSchema = new mongoose.Schema(
     bio: {
       type: String,
     },
+    avatarUrl: {
+      type: String,
+    },
     lastSeen: {
       type: String,
     },
@@ -28,18 +30,6 @@ const userSchema = new mongoose.Schema(
         ref: "channel",
       },
     ],
-    verification: {
-      code: {
-        type: String,
-      },
-      verified: {
-        type: Boolean,
-        default: false,
-      },
-      expires: {
-        type: Date,
-      },
-    },
   },
   { timestamps: true }
 );

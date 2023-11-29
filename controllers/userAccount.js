@@ -1,7 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
-
+const crypto = require("crypto");
 const User = require("../models/Users");
 const Channel = require("../models/Channel");
 const { userEvents } = require("../utils/index");
@@ -10,13 +9,12 @@ const { userEvents } = require("../utils/index");
 const signup = async (req, res) => {
   let message = "";
   try {
-    let { username, email, password, confirmPassword } = req.body;
-    if (!username || !email || !password || !confirmPassword) {
+    let { email, password, confirmPassword } = req.body;
+    if (!email || !password || !confirmPassword) {
       message = "all fields are required";
       res.status(400).json({ message });
       return;
     }
-
     if (password !== confirmPassword) {
       message = "passwords do not match";
       res.status(401).json({ message });
@@ -24,7 +22,7 @@ const signup = async (req, res) => {
     }
 
     password = await bcrypt.hash(password, 10);
-    const account = { username, email, password, username };
+    const account = { email, password };
     const user = await User.create(account);
 
     if (!user) {
@@ -32,11 +30,11 @@ const signup = async (req, res) => {
       res.status(401).json({ message });
       return;
     }
-
     message = "ok";
-    res.status(200).json({ message });
+    res.status(200).json({ message, profileUrl });
     return;
   } catch (err) {
+    console.log(err);
     let StatusCode = 500;
     message = "Internal Server Error";
 
@@ -88,9 +86,7 @@ const login = async (req, res) => {
   }
 };
 
-const UpdateProfilePic = async(req,res)=>{
-  console.log(req.file)
-}
+
 async function offlineIndicator(io, socket) {
   const { userId } = socket.decoded;
 
@@ -174,5 +170,4 @@ module.exports = {
   onlineIndicator,
   typing,
   userStatus,
-  UpdateProfilePic
 };

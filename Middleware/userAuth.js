@@ -34,6 +34,7 @@ const authenticateSocket = async (socket, next) => {
     socketError(socket, userEvents.errorMessage, message);
   }
 };
+
 module.exports = {
   authenticateSocket,
 };
