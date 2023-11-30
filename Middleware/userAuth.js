@@ -34,6 +34,30 @@ const authenticateSocket = async (socket, next) => {
     socketError(socket, userEvents.errorMessage, message);
   }
 };
+const authenticateUser = async (req, res, next) => {
+  let message = "";
+  const token = req.headers.authorization;
+  if (!token) {
+    message = "token does not exist";
+    res.status(401).json({ message });
+  }
+
+  const payload = jwt.verify(token, process.env.JWT_SECRET);
+  if (!payload) {
+    message = "invalid token";
+    res.status(401).json({ message });
+  }
+  const userId = payload.userInfo.userId;
+  const findUser = await User.findById(userId);
+  if (!findUser) {
+    message = "user does not exist";
+    res.status(401).json({ message });
+  }
+
+  const foundUserId = findUser._id;
+  req.userId = foundUserId;
+  next();
+};
 
 module.exports = {
   authenticateSocket,
