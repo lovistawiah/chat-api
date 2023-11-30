@@ -31,7 +31,7 @@ const signup = async (req, res) => {
       return;
     }
     message = "ok";
-    res.status(200).json({ message, profileUrl });
+    res.status(200).json({ message });
     return;
   } catch (err) {
     console.log(err);

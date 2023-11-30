@@ -34,6 +34,7 @@ const authenticateSocket = async (socket, next) => {
     socketError(socket, userEvents.errorMessage, message);
   }
 };
+
 const authenticateUser = async (req, res, next) => {
   let message = "";
   const token = req.headers.authorization;
@@ -48,17 +49,20 @@ const authenticateUser = async (req, res, next) => {
     res.status(401).json({ message });
   }
   const userId = payload.userInfo.userId;
+  console.log(payload.userInfo);
   const findUser = await User.findById(userId);
+
   if (!findUser) {
     message = "user does not exist";
     res.status(401).json({ message });
+  } else {
+    const foundUserId = findUser._id;
+    req.userId = foundUserId;
+    next();
   }
-
-  const foundUserId = findUser._id;
-  req.userId = foundUserId;
-  next();
 };
 
 module.exports = {
   authenticateSocket,
+  authenticateUser,
 };
