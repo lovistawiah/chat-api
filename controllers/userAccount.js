@@ -1,9 +1,9 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
 const User = require("../models/Users");
 const Channel = require("../models/Channel");
 const { userEvents } = require("../utils/index");
+const { getUserFromEmail } = require("../utils/user");
 
 // ? signup controller
 const signup = async (req, res) => {
@@ -20,9 +20,15 @@ const signup = async (req, res) => {
             res.status(401).json({ message });
             return;
         }
+        const uniqueUserName = await getUserFromEmail(email);
+        if (!uniqueUserName) {
+            message = "unknown error, try again!";
+            res.status(400).json({ message });
+            return;
+        }
 
         password = await bcrypt.hash(password, 10);
-        const account = { email, password };
+        const account = { email, password, username: uniqueUserName };
         const user = await User.create(account);
 
         if (!user) {
@@ -34,7 +40,6 @@ const signup = async (req, res) => {
         res.status(200).json({ message });
         return;
     } catch (err) {
-        console.log(err);
         let StatusCode = 500;
         message = "Internal Server Error";
 
