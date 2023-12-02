@@ -61,7 +61,6 @@ const createMessage = async (io, socket) => {
           channelId  = existingChannelMembers.channelId
         }
       } else if (otherUserId) {
-        console.log('here')
         const newMembers = [loggedUserId, otherUserId];
         const newChannelMembers = await createNewChanel(newMembers);
         if (newChannelMembers) {
@@ -125,7 +124,6 @@ async function newMessageAndSend(
       $push: { messages: messageCreated._id },
     });
   } catch (e) {
-    console.log(e.message)
     const message = e.message;
     socketError(socket, messageEvents.errorMessage, message);
   }
@@ -135,3 +133,6 @@ module.exports = {
   getMessages,
   createMessage,
 };
+// TODO: send audio and video message and set url as message.
+// TODO: set profile url in avatar and default url should be robo hash url,
+// TODO: learn status page.

@@ -1,47 +1,38 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
-  {
-    username: {
-      type: String,
-      required: true,
-      unique: true,
+    {
+        username: {
+            type: String,
+            unique: true,
+            required: true,
+        },
+        email: {
+            type: String,
+            required: true,
+            unique: true,
+        },
+        password: {
+            type: String,
+            required: true,
+        },
+        bio: {
+            type: String,
+        },
+        avatarUrl: {
+            type: String,
+        },
+        lastSeen: {
+            type: String,
+        },
+        channels: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "channel",
+            },
+        ],
     },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    password: {
-      type: String,
-      required: true,
-    },
-    bio: {
-      type: String,
-    },
-    lastSeen: {
-      type: String,
-    },
-    channels: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "channel",
-      },
-    ],
-    verification: {
-      code: {
-        type: String,
-      },
-      verified: {
-        type: Boolean,
-        default: false,
-      },
-      expires: {
-        type: Date,
-      },
-    },
-  },
-  { timestamps: true }
+    { timestamps: true }
 );
 userSchema.index({ channels: 1, "channels.messages": -1 });
 

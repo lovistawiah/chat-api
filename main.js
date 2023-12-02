@@ -29,14 +29,14 @@ ioInstance.attach(server);
 
 const PORT = process.env.PORT || 5000;
 async function start(url) {
-  try {
-    await connection(url);
-    server.listen(PORT, () => {
-      console.log(`listening on http://localhost:${PORT}`);
-    });
-  } catch (err) {
-    console.log(err.message);
-  }
+    try {
+        await connection(url);
+        server.listen(PORT, () => {
+            console.log(`listening on http://localhost:${PORT}`);
+        });
+    } catch (err) {
+        console.log(err.message);
+    }
 }
 
 start(MONGO_URI);
