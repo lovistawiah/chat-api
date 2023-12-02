@@ -49,7 +49,6 @@ const authenticateUser = async (req, res, next) => {
     res.status(401).json({ message });
   }
   const userId = payload.userInfo.userId;
-  console.log(payload.userInfo);
   const findUser = await User.findById(userId);
 
   if (!findUser) {

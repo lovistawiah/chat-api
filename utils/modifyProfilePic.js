@@ -8,10 +8,9 @@ const bucketName = "you-and-i-testing";
 const bucket = storage.bucket(bucketName);
 
 async function updateProfilePic(req, res) {
+    let message = "";
     try {
-        let message = "";
         const file = req.file;
-        console.log(file);
         if (!req.file) {
             message = "file not uploaded, try again!";
             res.status(400).json({ message });
@@ -33,8 +32,8 @@ async function updateProfilePic(req, res) {
             return;
         }
     } catch (error) {
-        console.log(error);
-        res.status(500).send(error);
+        message = error.message;
+        res.status(500).json({ message });
     }
 }
 

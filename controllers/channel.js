@@ -138,7 +138,6 @@ const createNewChanel = async (members) => {
   } else {
     const newChannel = await Channel.create({ members });
     if (!newChannel) return;
-    console.log(newChannel, 18);
     newChannel.members.forEach(async (member) => {
       await User.findByIdAndUpdate(member._id, {
         $push: { channels: newChannel._id },

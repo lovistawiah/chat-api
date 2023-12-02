@@ -11,9 +11,9 @@ const encryptMessage = (message, key, iv) => {
     return encrypted;
 };
 
-const decryptMessage = (encryptedMessage, key, iv) => {
+const decryptMessage = (message, key, iv) => {
     const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
-    let decrypted = decipher.update(encryptedMessage, "hex", "utf-8");
+    let decrypted = decipher.update(message, "hex", "utf-8");
     decrypted += decipher.final("utf-8");
     return decrypted;
 };
