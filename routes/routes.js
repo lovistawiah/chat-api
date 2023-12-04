@@ -4,13 +4,12 @@ const multer = require("multer");
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-const { signup, login } = require("../controllers/userAccount");
-const { updateProfilePic } = require("../utils/modifyProfilePic");
+const { signup, login, updateUserAvatar } = require("../controllers/userAccount");
 const { authenticateUser } = require("../Middleware/userAuth");
 router.route("/signup").post(signup);
 router.route("/login").post(login);
 router
   .route("/profile-pic")
-  .post(upload.single("image"), authenticateUser, updateProfilePic);
+  .post(upload.single("image"), authenticateUser, updateUserAvatar);
 
 module.exports = router;

@@ -7,33 +7,30 @@ const storage = new Storage({
 const bucketName = "you-and-i-testing";
 const bucket = storage.bucket(bucketName);
 
-async function updateProfilePic(req, res) {
-    let message = "";
+async function saveAndGetUserProfileUrl(file) {
+    let message;
     try {
-        const file = req.file;
-        if (!req.file) {
-            message = "file not uploaded, try again!";
-            res.status(400).json({ message });
+        if (!file) {
+            message = new Error('"file not uploaded, try again!"');
+            return message;
         } else {
             const fileExtension = file.mimetype.split("/")[1];
             const extensions = ["jpeg", "png", "webp"];
             if (!extensions.includes(fileExtension)) {
-                message = "unsupported image file";
-                res.status(400).json({ message });
-                return;
+                message = new Error("unsupported image file");
+                return message;
             }
             const fileObj = {
                 fileName: `profile/${req.userId}.${fileExtension}`,
                 buffer: file.buffer,
             };
             saveProfile(fileObj.fileName, fileObj.buffer);
-            const getSignedUrl = await profileUrl(fileObj.fileName);
-            res.status(200).json({ getSignedUrl });
-            return;
+            const getSignedUrl = await getProfileUrl(fileObj.fileName);
+            return getSignedUrl;
         }
     } catch (error) {
-        message = error.message;
-        res.status(500).json({ message });
+        message = new Error(error.message);
+        return message;
     }
 }
 
@@ -41,7 +38,7 @@ async function saveProfile(fileName, contents) {
     await bucket.file(fileName).save(contents);
 }
 
-async function profileUrl(fileName) {
+async function getProfileUrl(fileName) {
     const urlOptions = {
         version: "v2",
         action: "read",
@@ -50,4 +47,4 @@ async function profileUrl(fileName) {
     const url = bucket.file(fileName).getSignedUrl(urlOptions);
     return url;
 }
-module.exports = { updateProfilePic };
+module.exports = { saveAndGetUserProfileUrl };

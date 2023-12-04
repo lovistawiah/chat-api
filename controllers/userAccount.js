@@ -4,6 +4,7 @@ const User = require("../models/Users");
 const Channel = require("../models/Channel");
 const { userEvents } = require("../utils/index");
 const { getUserFromEmail } = require("../utils/user");
+const { saveAndGetUserProfileUrl } = require("../utils/modifyProfilePic");
 
 // ? signup controller
 const signup = async (req, res) => {
@@ -175,11 +176,39 @@ const typing = (socket) => {
     });
 };
 
+/**
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {Response}
+ */
+async function updateUserAvatar(req, res) {
+    let message = "";
+    const file = req.file;
+    const url = await saveAndGetUserProfileUrl(file);
+    if (url instanceof Error) {
+        message = url.message;
+        res.status(400).json({ message });
+    } else {
+        const findUser = await User.findById(id);
+        if (!findUser) {
+            message = "user does not exist";
+            res.status(400).json({ message });
+            return;
+        } else {
+            findUser.avatarUrl = url;
+            await findUser.save();
+            message = "profile updated!";
+            res.status(400).json({ message });
+            return;
+        }
+    }
+}
+
 module.exports = {
-    login,
     signup,
     offlineIndicator,
     onlineIndicator,
     typing,
     userStatus,
+    updateUserAvatar,
 };
