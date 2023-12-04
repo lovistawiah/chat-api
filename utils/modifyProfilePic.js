@@ -7,7 +7,7 @@ const storage = new Storage({
 const bucketName = "you-and-i-testing";
 const bucket = storage.bucket(bucketName);
 
-async function saveAndGetUserProfileUrl(file) {
+async function saveAndGetUserProfileUrl(file,id) {
     let message;
     try {
         if (!file) {
@@ -16,12 +16,14 @@ async function saveAndGetUserProfileUrl(file) {
         } else {
             const fileExtension = file.mimetype.split("/")[1];
             const extensions = ["jpeg", "png", "webp"];
+
             if (!extensions.includes(fileExtension)) {
                 message = new Error("unsupported image file");
                 return message;
             }
+
             const fileObj = {
-                fileName: `profile/${req.userId}.${fileExtension}`,
+                fileName: `profiles/${id}.${fileExtension}`,
                 buffer: file.buffer,
             };
             saveProfile(fileObj.fileName, fileObj.buffer);

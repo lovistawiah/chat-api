@@ -27,9 +27,16 @@ const signup = async (req, res) => {
             res.status(400).json({ message });
             return;
         }
-
+        const defaultUrl = "https://robohash.org/" + uniqueUserName;
         password = await bcrypt.hash(password, 10);
-        const account = { email, password, username: uniqueUserName };
+        
+        const account = {
+            email,
+            password,
+            username: uniqueUserName,
+            avatarUrl: defaultUrl,
+        };
+
         const user = await User.create(account);
 
         if (!user) {
@@ -182,23 +189,27 @@ const typing = (socket) => {
  * @returns {Response}
  */
 async function updateUserAvatar(req, res) {
+    const userId = req.userId;
     let message = "";
     const file = req.file;
-    const url = await saveAndGetUserProfileUrl(file);
+    const url = await saveAndGetUserProfileUrl(file, userId);
     if (url instanceof Error) {
         message = url.message;
         res.status(400).json({ message });
     } else {
-        const findUser = await User.findById(id);
+        const findUser = await User.findById(userId);
         if (!findUser) {
             message = "user does not exist";
             res.status(400).json({ message });
             return;
         } else {
-            findUser.avatarUrl = url;
+            // the url returns an array of one link,
+            const shortUrl = url[0].split("?")[0];
+            console.log(shortUrl);
+            findUser.avatarUrl = shortUrl;
             await findUser.save();
             message = "profile updated!";
-            res.status(400).json({ message });
+            res.status(200).json({ shortUrl });
             return;
         }
     }
@@ -206,6 +217,7 @@ async function updateUserAvatar(req, res) {
 
 module.exports = {
     signup,
+    login,
     offlineIndicator,
     onlineIndicator,
     typing,
