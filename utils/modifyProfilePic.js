@@ -7,7 +7,7 @@ const storage = new Storage({
 const bucketName = "you-and-i-testing";
 const bucket = storage.bucket(bucketName);
 
-async function saveAndGetUserProfileUrl(file,id) {
+async function saveAndGetUserProfileUrl(file, id) {
     let message;
     try {
         if (!file) {

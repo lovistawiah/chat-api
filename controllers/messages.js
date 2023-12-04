@@ -134,5 +134,4 @@ module.exports = {
   createMessage,
 };
 // TODO: send audio and video message and set url as message.
-// TODO: set profile url in avatar and default url should be robo hash url,
 // TODO: learn status page.
