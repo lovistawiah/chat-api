@@ -27,8 +27,10 @@ async function saveAndGetUserProfileUrl(file, id) {
                 buffer: file.buffer,
             };
             saveProfile(fileObj.fileName, fileObj.buffer);
-            const getSignedUrl = await getProfileUrl(fileObj.fileName);
-            return getSignedUrl;
+            const getSignedUrl = await getFileUrl(fileObj.fileName);
+            // the url returns an array of one link,
+            const shortUrl = getSignedUrl[0].split("?")[0];
+            return shortUrl;
         }
     } catch (error) {
         message = new Error(error.message);
@@ -40,7 +42,7 @@ async function saveProfile(fileName, contents) {
     await bucket.file(fileName).save(contents);
 }
 
-async function getProfileUrl(fileName) {
+async function getFileUrl(fileName) {
     const urlOptions = {
         version: "v2",
         action: "read",

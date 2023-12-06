@@ -1,7 +1,7 @@
 const User = require("../models/Users");
 const { v4: uuid } = require("uuid");
 
-async function getUserFromEmail(email) {
+async function getUserNameFromEmail(email) {
     let isUnique = false;
     let message = "";
 
@@ -25,4 +25,4 @@ async function getUserFromEmail(email) {
     }
 }
 
-module.exports = { getUserFromEmail };
+module.exports = { getUserNameFromEmail };

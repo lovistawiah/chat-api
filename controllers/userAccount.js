@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/Users");
 const Channel = require("../models/Channel");
 const { userEvents } = require("../utils/index");
-const { getUserFromEmail } = require("../utils/user");
+const { getUserNameFromEmail } = require("../utils/user");
 const { saveAndGetUserProfileUrl } = require("../utils/modifyProfilePic");
 
 // ? signup controller
@@ -21,7 +21,7 @@ const signup = async (req, res) => {
             res.status(401).json({ message });
             return;
         }
-        const uniqueUserName = await getUserFromEmail(email);
+        const uniqueUserName = await getUserNameFromEmail(email);
         if (!uniqueUserName) {
             message = "unknown error, try again!";
             res.status(400).json({ message });
@@ -29,7 +29,7 @@ const signup = async (req, res) => {
         }
         const defaultUrl = "https://robohash.org/" + uniqueUserName;
         password = await bcrypt.hash(password, 10);
-        
+
         const account = {
             email,
             password,
@@ -186,16 +186,32 @@ const typing = (socket) => {
 /**
  * @param {Request} req
  * @param {Response} res
- * @returns {Response}
+ * @returns {void}
  */
 async function updateUserAvatar(req, res) {
-    const userId = req.userId;
-    let message = "";
     const file = req.file;
+    const userId = req.userId;
+    const { username } = req.body;
+    let message = "";
+
+    if (username) {
+        const foundUsername = await User.find({ username });
+        if (foundUsername) {
+            message = "username already exist";
+            res.status(400).json({ message });
+            return;
+        }
+    }
+    if (!file) {
+        message = "profile pic not selected";
+        res.status(400).json({ message });
+        return;
+    }
     const url = await saveAndGetUserProfileUrl(file, userId);
     if (url instanceof Error) {
         message = url.message;
         res.status(400).json({ message });
+        return;
     } else {
         const findUser = await User.findById(userId);
         if (!findUser) {
@@ -203,13 +219,10 @@ async function updateUserAvatar(req, res) {
             res.status(400).json({ message });
             return;
         } else {
-            // the url returns an array of one link,
-            const shortUrl = url[0].split("?")[0];
-            console.log(shortUrl);
-            findUser.avatarUrl = shortUrl;
+            findUser.avatarUrl = url;
             await findUser.save();
             message = "profile updated!";
-            res.status(200).json({ shortUrl });
+            res.status(200).json({ url });
             return;
         }
     }

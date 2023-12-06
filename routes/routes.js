@@ -9,7 +9,7 @@ const { authenticateUser } = require("../Middleware/userAuth");
 router.route("/signup").post(signup);
 router.route("/login").post(login);
 router
-  .route("/profile-pic")
+  .route("/update-profile")
   .post(upload.single("image"), authenticateUser, updateUserAvatar);
 
 module.exports = router;
