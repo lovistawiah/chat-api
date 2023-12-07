@@ -119,7 +119,7 @@ const searchChannels = (socket) => {
           { username: { $regex: searchValue, $options: "i" } },
           { _id: { $nin: registeredMembers } }, // $nin - not in specified array
         ],
-      }).select("username");
+      }).select(["username","avatarUrl"]);
       socket.emit(channelEvents.search, newFriends);
     } catch (err) {
       const message = err.message;
