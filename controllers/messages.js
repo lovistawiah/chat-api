@@ -45,12 +45,13 @@ const createMessage = async (io, socket) => {
         const channel = await findOrCreateChannel(members);
 
         if (!channel) return;
-        
+
         const channelMembers = channel.channelMembers;
         const channelId = channel.channelId;
 
         const messageReceivers = addMembers(channelMembers);
-        
+        if (!messageReceivers) return;
+
         newMessageAndSend(
             socket,
             channelId,
@@ -92,6 +93,7 @@ async function newMessageAndSend(
             messageDate: createdAt,
             channelId,
         };
+        // FIXME: instant messaging issue, fix server sending message back to the receiver and the sender
         messageReceivers.forEach((receiver) => {
             io.to(receiver).emit(messageEvents.sendMessage, messageEdited);
         });
