@@ -1,12 +1,11 @@
 const { Server } = require("socket.io");
 const { authenticateSocket } = require("../Middleware/userAuth");
-const { getChannels, searchChannels } = require("../controllers/channel");
 const {
-    createMessage,
-    getMessages,
-
-    createNewChannelAndMessage,
-} = require("../controllers/messages");
+    getChannels,
+    searchChannels,
+    friendsInfo,
+} = require("../controllers/channel");
+const { createMessage, getMessages } = require("../controllers/messages");
 const {
     offlineIndicator,
     onlineIndicator,
@@ -42,6 +41,7 @@ io.on("connection", (socket) => {
     //from controller/channel.js
     getChannels(socket);
     searchChannels(socket);
+    friendsInfo(socket);
 });
 
 module.exports = io;
