@@ -1,13 +1,19 @@
+const { Socket} = require("socket.io");
 const { socketError } = require("../ioInstance/socketError");
 const Channel = require("../models/Channel");
 const User = require("../models/Users");
 const { channelEvents } = require("../utils");
-
+/**
+ *
+ * @param {Socket} socket
+ * @returns
+ */
 const getChannels = async (socket) => {
     const channelAndLastMessage = [];
     let message = "";
     try {
         const { userId } = socket.decoded;
+        console.log(userId);
         const userChannels = await Channel.find({ members: { $in: userId } })
             .populate([
                 {
@@ -58,7 +64,6 @@ const getChannels = async (socket) => {
                         sender: lastMessageDetails.sender,
                         createdAt: lastMessageDetails.createdAt,
                     };
-
                     channelAndLastMessage.push({
                         channelInfo,
                         userInfo,
@@ -75,6 +80,7 @@ const getChannels = async (socket) => {
         }
     } catch (err) {
         message = err.message;
+        console.log(message);
         socketError(socket, channelEvents.errorMessage, message);
     }
 };

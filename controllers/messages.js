@@ -3,6 +3,7 @@ const Messages = require("../models/Messages");
 const { findOrCreateChannel } = require("./channel");
 const { messageEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
+const { Mongoose } = require("mongoose");
 
 const getMessages = (socket) => {
     socket.on(messageEvents.displayChannelMessages, async ({ channelId }) => {
@@ -41,6 +42,7 @@ const createMessage = async (io, socket) => {
     const loggedUserId = socket.decoded.userId;
     socket.on(messageEvents.sendMessage, async ({ message, userId }) => {
         if (!message) return;
+
         const members = [loggedUserId, userId];
         const channel = await findOrCreateChannel(members);
 
@@ -70,6 +72,15 @@ function addMembers(channelMembers) {
         return channelMember._id.toString();
     });
 }
+/**
+ * 
+ * @param {socket} socket 
+ * @param {*} channelId 
+ * @param {*} loggedUserId 
+ * @param {*} message 
+ * @param {*} messageReceivers 
+ * @param {*} io 
+ */
 
 async function newMessageAndSend(
     socket,
