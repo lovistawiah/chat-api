@@ -1,4 +1,4 @@
-const { Socket} = require("socket.io");
+const { Socket } = require("socket.io");
 const { socketError } = require("../ioInstance/socketError");
 const Channel = require("../models/Channel");
 const User = require("../models/Users");
@@ -13,7 +13,6 @@ const getChannels = async (socket) => {
     let message = "";
     try {
         const { userId } = socket.decoded;
-        console.log(userId);
         const userChannels = await Channel.find({ members: { $in: userId } })
             .populate([
                 {
@@ -80,7 +79,7 @@ const getChannels = async (socket) => {
         }
     } catch (err) {
         message = err.message;
-        console.log(message);
+        console.log(err);
         socketError(socket, channelEvents.errorMessage, message);
     }
 };
@@ -133,7 +132,7 @@ const friendsInfo = async (socket) => {
 };
 
 const findOrCreateChannel = async (members) => {
-    const findChannel = await Channel.findOne({ members: members });
+    const findChannel = await Channel.findOne({ members: { $all: members } });
     if (findChannel) {
         return {
             channelId: findChannel._id,
@@ -142,6 +141,7 @@ const findOrCreateChannel = async (members) => {
     } else {
         const newChannel = await Channel.create({ members });
         if (!newChannel) return;
+        console.log("created");
         newChannel.members.forEach(async (member) => {
             await User.findByIdAndUpdate(member._id, {
                 $push: { channels: newChannel._id },

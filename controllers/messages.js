@@ -3,7 +3,8 @@ const Messages = require("../models/Messages");
 const { findOrCreateChannel } = require("./channel");
 const { messageEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
-const { Mongoose } = require("mongoose");
+const { Server, Socket } = require("socket.io");
+const { Types, default: mongoose } = require("mongoose");
 
 const getMessages = (socket) => {
     socket.on(messageEvents.displayChannelMessages, async ({ channelId }) => {
@@ -73,13 +74,13 @@ function addMembers(channelMembers) {
     });
 }
 /**
- * 
- * @param {socket} socket 
- * @param {*} channelId 
- * @param {*} loggedUserId 
- * @param {*} message 
- * @param {*} messageReceivers 
- * @param {*} io 
+ *
+ * @param {Socket} socket
+ * @param {mongoose.Types.ObjectId} channelId
+ * @param {mongoose.Types.ObjectId} loggedUserId
+ * @param {string} message
+ * @param {[mongoose.Types.ObjectId]} messageReceivers
+ * @param {Server} io
  */
 
 async function newMessageAndSend(
@@ -96,7 +97,7 @@ async function newMessageAndSend(
             sender: loggedUserId,
             message,
         });
-
+        socket.join(channelId.toString());
         let { sender, createdAt } = messageCreated;
         const messageEdited = {
             message: messageCreated.message,
@@ -105,14 +106,17 @@ async function newMessageAndSend(
             channelId,
         };
         // FIXME: instant messaging issue, fix server sending message back to the receiver and the sender
-        messageReceivers.forEach((receiver) => {
-            io.to(receiver).emit(messageEvents.sendMessage, messageEdited);
-        });
+        io.to(channelId.toString()).emit(
+            messageEvents.sendMessage,
+            messageEdited
+        );
+
         await Channel.findByIdAndUpdate(channelId, {
             $push: { messages: messageCreated._id },
         });
     } catch (e) {
         const message = e.message;
+        console.log(e);
         socketError(socket, messageEvents.errorMessage, message);
     }
 }

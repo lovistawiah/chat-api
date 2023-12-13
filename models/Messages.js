@@ -23,8 +23,6 @@ const messageSchema = new mongoose.Schema(
         message: {
             type: String,
             required: true,
-            get: (message) => decryptMessage(message, key, iv),
-            set: (message) => encryptMessage(message, key, iv),
         },
         reaction: {
             type: String,

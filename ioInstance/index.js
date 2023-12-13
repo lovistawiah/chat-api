@@ -25,7 +25,6 @@ const io = new Server({
 io.use(authenticateSocket);
 
 io.on("connection", (socket) => {
-    socket.join(socket.decoded.userId);
     socket.userId = socket.decoded.userId;
     userStatus(socket);
     offlineIndicator(io, socket);
