@@ -50,6 +50,7 @@ const getChannels = async (socket) => {
                     const userInfo = {
                         userId: member._id,
                         username: member.username,
+                        avatarUrl: member.avatarUrl
                     };
 
                     const channelInfo = {

@@ -4,12 +4,15 @@ const { findOrCreateChannel } = require("./channel");
 const { messageEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
 const { Server, Socket } = require("socket.io");
-const { Types, default: mongoose } = require("mongoose");
+const { default: mongoose, Types } = require("mongoose");
 
+/**
+ *
+ * @param {Socket} socket
+ */
 const getMessages = (socket) => {
-    socket.on(messageEvents.displayChannelMessages, async ({ channelId }) => {
+    socket.on(messageEvents.channelMessages, async (channelId) => {
         //using the channelId to retrieve the all the messages in a particular channel
-
         try {
             const channelMessages = await Channel.findOne({
                 _id: channelId,
@@ -31,14 +34,14 @@ const getMessages = (socket) => {
                     createdAt,
                 });
             });
-
-            socket.emit(messageEvents.displayChannelMessages, messages);
+            socket.emit(messageEvents.channelMessages, messages);
         } catch (err) {
             const message = err.message;
             socketError(socket, messageEvents.errorMessage, message);
         }
     });
 };
+
 const createMessage = async (io, socket) => {
     const loggedUserId = socket.decoded.userId;
     socket.on(messageEvents.sendMessage, async ({ message, userId }) => {
@@ -60,13 +63,15 @@ const createMessage = async (io, socket) => {
             channelId,
             loggedUserId,
             message,
-            messageReceivers,
-            socket,
             io
         );
     });
 };
-
+/**
+ *
+ * @param {[Types.ObjectId]} channelMembers
+ * @returns {[string]}
+ */
 function addMembers(channelMembers) {
     if (!Array.isArray(channelMembers)) return;
     return channelMembers.map((channelMember) => {
@@ -79,8 +84,8 @@ function addMembers(channelMembers) {
  * @param {mongoose.Types.ObjectId} channelId
  * @param {mongoose.Types.ObjectId} loggedUserId
  * @param {string} message
- * @param {[mongoose.Types.ObjectId]} messageReceivers
- * @param {Server} io
+//  * @param {[mongoose.Types.ObjectId]} messageReceivers
+ *@param {*} io
  */
 
 async function newMessageAndSend(
@@ -88,39 +93,45 @@ async function newMessageAndSend(
     channelId,
     loggedUserId,
     message,
-    messageReceivers,
     io
 ) {
     try {
+        // Create a new message
         const messageCreated = await Messages.create({
             channelId,
             sender: loggedUserId,
             message,
         });
+
+        // Join the socket to the channel room
         socket.join(channelId.toString());
-        let { sender, createdAt } = messageCreated;
+        // Extract necessary information from the created message
+        const { sender, createdAt, _id } = messageCreated;
+
+        // Prepare the message object to send to the channel
         const messageEdited = {
+            _id,
             message: messageCreated.message,
             sender,
             messageDate: createdAt,
             channelId,
         };
-        // FIXME: instant messaging issue, fix server sending message back to the receiver and the sender
+        // Emit the new message to the channel room
         io.to(channelId.toString()).emit(
             messageEvents.sendMessage,
             messageEdited
         );
-
+        // Update the channel with the new message ID
         await Channel.findByIdAndUpdate(channelId, {
-            $push: { messages: messageCreated._id },
+            $push: { messages: _id },
         });
     } catch (e) {
-        const message = e.message;
+        const errorMessage = e.message;
         console.log(e);
-        socketError(socket, messageEvents.errorMessage, message);
+        // Handle the error by sending an error message to the socket
+        socketError(socket, messageEvents.errorMessage, errorMessage);
     }
 }
-
 module.exports = {
     getMessages,
     createMessage,

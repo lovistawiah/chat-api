@@ -12,11 +12,11 @@ const channelEvents = {
 };
 
 const messageEvents = {
-  sendMessage: "sendMessage",
-  deleteMessage: "deleteMessage",
-  offlineOnlineIndicator: "offlineOnlineIndicator",
-  displayChannelMessages: "displayChannelMessages",
-  errorMessage: "errorMessage",
+    sendMessage: "sendMessage",
+    deleteMessage: "deleteMessage",
+    offlineOnlineIndicator: "offlineOnlineIndicator",
+    channelMessages: "channelMessages",
+    errorMessage: "errorMessage",
 };
 
 module.exports = {

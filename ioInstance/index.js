@@ -24,7 +24,7 @@ const io = new Server({
 });
 io.use(authenticateSocket);
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
     socket.userId = socket.decoded.userId;
     userStatus(socket);
     offlineIndicator(io, socket);
