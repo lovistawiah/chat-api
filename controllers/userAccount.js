@@ -5,8 +5,15 @@ const Channel = require("../models/Channel");
 const { userEvents } = require("../utils/index");
 const { getUserNameFromEmail } = require("../utils/user");
 const { saveAndGetUserProfileUrl } = require("../utils/modifyProfilePic");
+const { Socket, Server } = require("socket.io");
 
 // ? signup controller
+/**
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ * @returns {Promise<void>}
+ */
 const signup = async (req, res) => {
     let message = "";
     try {
@@ -44,7 +51,7 @@ const signup = async (req, res) => {
             res.status(401).json({ message });
             return;
         }
-        message = "ok";
+        message = "account created";
         res.status(200).json({ message });
         return;
     } catch (err) {
@@ -59,7 +66,12 @@ const signup = async (req, res) => {
         res.status(StatusCode).json({ message });
     }
 };
-
+/**
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ * @returns 
+ */
 const login = async (req, res) => {
     let message = "";
     try {
@@ -98,7 +110,11 @@ const login = async (req, res) => {
         res.status(500).json({ message });
     }
 };
-
+/**
+ * 
+ * @param {new Server} io 
+ * @param {Socket} socket 
+ */
 async function offlineIndicator(io, socket) {
     const { userId } = socket.decoded;
 
@@ -128,7 +144,12 @@ async function offlineIndicator(io, socket) {
         });
     });
 }
-
+/**
+ * 
+ * @param {Socket} socket 
+ * @param {new Server} io 
+ * @returns 
+ */
 const onlineIndicator = async (socket, io) => {
     const status = "online";
     const { userId } = socket.decoded;
@@ -152,7 +173,10 @@ const onlineIndicator = async (socket, io) => {
         });
     });
 };
-
+/**
+ * 
+ * @param {Socket} socket 
+ */
 const userStatus = (socket) => {
     socket.on(userEvents.status, async (data) => {
         const userId = data;
@@ -162,7 +186,10 @@ const userStatus = (socket) => {
         socket.emit(userEvents.status, { status, userId });
     });
 };
-
+/**
+ * 
+ * @param {Socket} socket 
+ */
 const typing = (socket) => {
     socket.on(userEvents.typing, async (data) => {
         let receiver;

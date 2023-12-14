@@ -3,6 +3,7 @@ const { socketError } = require("../ioInstance/socketError");
 const Channel = require("../models/Channel");
 const User = require("../models/Users");
 const { channelEvents } = require("../utils");
+const { Types } = require("mongoose");
 /**
  *
  * @param {Socket} socket
@@ -50,7 +51,7 @@ const getChannels = async (socket) => {
                     const userInfo = {
                         userId: member._id,
                         username: member.username,
-                        avatarUrl: member.avatarUrl
+                        avatarUrl: member.avatarUrl,
                     };
 
                     const channelInfo = {
@@ -85,6 +86,10 @@ const getChannels = async (socket) => {
     }
 };
 
+/**
+ *
+ * @param {Socket} socket
+ */
 const searchChannels = (socket) => {
     socket.on(channelEvents.search, async (searchValue) => {
         const { userId } = socket.decoded;
@@ -115,7 +120,10 @@ const searchChannels = (socket) => {
         }
     });
 };
-
+/**
+ *
+ * @param {Socket} socket
+ */
 const friendsInfo = async (socket) => {
     const { userId } = socket.decoded;
 
@@ -131,7 +139,11 @@ const friendsInfo = async (socket) => {
         socketError(socket, channelEvents.errorMessage, message);
     }
 };
-
+/**
+ * 
+ * @param {[import("mongoose").ObjectId]} members 
+ *
+ */
 const findOrCreateChannel = async (members) => {
     const findChannel = await Channel.findOne({ members: { $all: members } });
     if (findChannel) {

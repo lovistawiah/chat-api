@@ -3,7 +3,7 @@ const Messages = require("../models/Messages");
 const { findOrCreateChannel } = require("./channel");
 const { messageEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
-const { Server, Socket } = require("socket.io");
+const {Socket, Server } = require("socket.io");
 const { default: mongoose, Types } = require("mongoose");
 
 /**
@@ -41,7 +41,11 @@ const getMessages = (socket) => {
         }
     });
 };
-
+/**
+ * 
+ * @param {new Server} io 
+ * @param {Socket} socket 
+ */
 const createMessage = async (io, socket) => {
     const loggedUserId = socket.decoded.userId;
     socket.on(messageEvents.sendMessage, async ({ message, userId }) => {
@@ -84,8 +88,7 @@ function addMembers(channelMembers) {
  * @param {mongoose.Types.ObjectId} channelId
  * @param {mongoose.Types.ObjectId} loggedUserId
  * @param {string} message
-//  * @param {[mongoose.Types.ObjectId]} messageReceivers
- *@param {*} io
+ *@param {new Server} io
  */
 
 async function newMessageAndSend(
@@ -97,7 +100,7 @@ async function newMessageAndSend(
 ) {
     try {
         // Create a new message
-        const messageCreated = await Messages.create({
+        const messageCreated = new Messages({
             channelId,
             sender: loggedUserId,
             message,
@@ -121,6 +124,7 @@ async function newMessageAndSend(
             messageEvents.sendMessage,
             messageEdited
         );
+        await messageCreated.save()
         // Update the channel with the new message ID
         await Channel.findByIdAndUpdate(channelId, {
             $push: { messages: _id },

@@ -2,7 +2,13 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/Users");
 const { socketError } = require("../ioInstance/socketError");
 const { userEvents } = require("../utils");
-
+const { Socket } = require("socket.io");
+/**
+ * 
+ * @param {Socket} socket 
+ * @param {*} next 
+ * @returns 
+ */
 const authenticateSocket = async (socket, next) => {
   let message = "";
   let { token } = socket.handshake.auth;
@@ -34,7 +40,12 @@ const authenticateSocket = async (socket, next) => {
     socketError(socket, userEvents.errorMessage, message);
   }
 };
-
+/**
+ * 
+ * @param {import("express").Request} req 
+ * @param {Response} res 
+ * @param {*} next 
+ */
 const authenticateUser = async (req, res, next) => {
   let message = "";
   const token = req.headers.authorization;

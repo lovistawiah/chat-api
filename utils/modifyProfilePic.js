@@ -1,4 +1,5 @@
 const { Storage } = require("@google-cloud/storage");
+const { Types } = require("mongoose");
 
 const storage = new Storage({
     projectId: process.env.PROJECT_ID,
@@ -6,7 +7,12 @@ const storage = new Storage({
 });
 const bucketName = "you-and-i-testing";
 const bucket = storage.bucket(bucketName);
-
+/**
+ * 
+ * @param {*} file 
+ * @param {Types.ObjectId} id 
+ * @returns 
+ */
 async function saveAndGetUserProfileUrl(file, id) {
     let message;
     try {
@@ -37,11 +43,20 @@ async function saveAndGetUserProfileUrl(file, id) {
         return message;
     }
 }
-
+/**
+ * 
+ * @param {string} fileName 
+ * @param {Buffer} contents 
+ */
 async function saveProfile(fileName, contents) {
     await bucket.file(fileName).save(contents);
 }
 
+/**
+ * 
+ * @param {string} fileName 
+ * @returns 
+ */
 async function getFileUrl(fileName) {
     const urlOptions = {
         version: "v2",
