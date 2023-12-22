@@ -9,9 +9,9 @@ const { Socket, Server } = require("socket.io");
 
 // ? signup controller
 /**
- * 
- * @param {import("express").Request} req 
- * @param {import("express").Response} res 
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
  * @returns {Promise<void>}
  */
 const signup = async (req, res) => {
@@ -67,10 +67,10 @@ const signup = async (req, res) => {
     }
 };
 /**
- * 
- * @param {import("express").Request} req 
- * @param {import("express").Response} res 
- * @returns 
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @returns
  */
 const login = async (req, res) => {
     let message = "";
@@ -111,9 +111,9 @@ const login = async (req, res) => {
     }
 };
 /**
- * 
- * @param {new Server} io 
- * @param {Socket} socket 
+ *
+ * @param {new Server} io
+ * @param {Socket} socket
  */
 async function offlineIndicator(io, socket) {
     const { userId } = socket.decoded;
@@ -145,10 +145,10 @@ async function offlineIndicator(io, socket) {
     });
 }
 /**
- * 
- * @param {Socket} socket 
- * @param {new Server} io 
- * @returns 
+ *
+ * @param {Socket} socket
+ * @param {new Server} io
+ * @returns
  */
 const onlineIndicator = async (socket, io) => {
     const status = "online";
@@ -174,8 +174,8 @@ const onlineIndicator = async (socket, io) => {
     });
 };
 /**
- * 
- * @param {Socket} socket 
+ *
+ * @param {Socket} socket
  */
 const userStatus = (socket) => {
     socket.on(userEvents.status, async (data) => {
@@ -187,8 +187,8 @@ const userStatus = (socket) => {
     });
 };
 /**
- * 
- * @param {Socket} socket 
+ *
+ * @param {Socket} socket
  */
 const typing = (socket) => {
     socket.on(userEvents.typing, async (data) => {
