@@ -3,7 +3,7 @@ const Messages = require("../models/Messages");
 const { findOrCreateChannel } = require("./channel");
 const { messageEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
-const {Socket, Server } = require("socket.io");
+const { Socket, Server } = require("socket.io");
 const { default: mongoose, Types } = require("mongoose");
 
 /**
@@ -42,9 +42,9 @@ const getMessages = (socket) => {
     });
 };
 /**
- * 
- * @param {new Server} io 
- * @param {Socket} socket 
+ *
+ * @param {new Server} io
+ * @param {Socket} socket
  */
 const createMessage = async (io, socket) => {
     const loggedUserId = socket.decoded.userId;
@@ -62,13 +62,7 @@ const createMessage = async (io, socket) => {
         const messageReceivers = addMembers(channelMembers);
         if (!messageReceivers) return;
 
-        newMessageAndSend(
-            socket,
-            channelId,
-            loggedUserId,
-            message,
-            io
-        );
+        newMessageAndSend(socket, channelId, loggedUserId, message, io);
     });
 };
 /**
@@ -91,13 +85,7 @@ function addMembers(channelMembers) {
  *@param {new Server} io
  */
 
-async function newMessageAndSend(
-    socket,
-    channelId,
-    loggedUserId,
-    message,
-    io
-) {
+async function newMessageAndSend(socket, channelId, loggedUserId, message, io) {
     try {
         // Create a new message
         const messageCreated = new Messages({
@@ -109,25 +97,26 @@ async function newMessageAndSend(
         // Join the socket to the channel room
         socket.join(channelId.toString());
         // Extract necessary information from the created message
-        const { sender, createdAt, _id } = messageCreated;
 
         // Prepare the message object to send to the channel
         const messageEdited = {
-            _id,
+            _id: messageCreated._id,
             message: messageCreated.message,
-            sender,
-            messageDate: createdAt,
-            channelId,
+            sender: messageCreated.sender,
+            createdAt: messageCreated.createdAt,
+            channelId: messageCreated.channelId,
         };
+        console.log(messageEdited);
         // Emit the new message to the channel room
         io.to(channelId.toString()).emit(
             messageEvents.sendMessage,
             messageEdited
         );
-        await messageCreated.save()
+
+        await messageCreated.save();
         // Update the channel with the new message ID
         await Channel.findByIdAndUpdate(channelId, {
-            $push: { messages: _id },
+            $push: { messages: messageCreated._id },
         });
     } catch (e) {
         const errorMessage = e.message;
