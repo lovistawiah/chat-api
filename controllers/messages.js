@@ -88,7 +88,7 @@ function addMembers(channelMembers) {
 async function newMessageAndSend(socket, channelId, loggedUserId, message, io) {
     try {
         // Create a new message
-        const messageCreated = new Messages({
+        const messageCreated = await Messages.create({
             channelId,
             sender: loggedUserId,
             message,
@@ -106,25 +106,23 @@ async function newMessageAndSend(socket, channelId, loggedUserId, message, io) {
             createdAt: messageCreated.createdAt,
             channelId: messageCreated.channelId,
         };
-        console.log(messageEdited);
         // Emit the new message to the channel room
         io.to(channelId.toString()).emit(
             messageEvents.sendMessage,
             messageEdited
         );
 
-        await messageCreated.save();
         // Update the channel with the new message ID
         await Channel.findByIdAndUpdate(channelId, {
             $push: { messages: messageCreated._id },
         });
     } catch (e) {
         const errorMessage = e.message;
-        console.log(e);
         // Handle the error by sending an error message to the socket
         socketError(socket, messageEvents.errorMessage, errorMessage);
     }
 }
+
 module.exports = {
     getMessages,
     createMessage,
