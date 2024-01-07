@@ -1,13 +1,4 @@
 const mongoose = require("mongoose");
-const {
-    decryptMessage,
-    encryptMessage,
-    generateIV,
-    generateKey,
-} = require("../utils/encrypt-decrypt");
-const key = generateKey();
-const iv = generateIV();
-
 const messageSchema = new mongoose.Schema(
     {
         channelId: {
