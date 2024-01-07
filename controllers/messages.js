@@ -127,5 +127,3 @@ module.exports = {
     getMessages,
     createMessage,
 };
-// TODO: send audio and video message and set url as message.
-// TODO: learn status page.
