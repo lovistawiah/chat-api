@@ -20,6 +20,7 @@
   "homepage": "https://github.com/lovistawiah/you-and-i#readme",
   "dependencies": {
     "@google-cloud/storage": "^7.6.0",
+    "@signalapp/libsignal-client": "^0.38.0",
     "bcrypt": "^5.1.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

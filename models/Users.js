@@ -25,6 +25,10 @@ const userSchema = new mongoose.Schema(
         lastSeen: {
             type: String,
         },
+        keys: {
+            privKey: String,
+            pubKey: String,
+        },
         channels: [
             {
                 type: mongoose.Schema.Types.ObjectId,
