@@ -7,7 +7,6 @@ const { getUserNameFromEmail } = require("../utils/user");
 const { saveAndGetUserProfileUrl } = require("../utils/modifyProfilePic");
 const { Socket, Server } = require("socket.io");
 
-// ? signup controller
 /**
  *
  * @param {import("express").Request} req
@@ -66,6 +65,7 @@ const signup = async (req, res) => {
         res.status(StatusCode).json({ message });
     }
 };
+
 /**
  *
  * @param {import("express").Request} req
@@ -202,7 +202,6 @@ const typing = (socket) => {
                 receiver = member._id.toString();
             }
         });
-
         const message = "typing...";
         socket
             .to(receiver)
