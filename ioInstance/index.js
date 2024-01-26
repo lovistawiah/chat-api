@@ -3,13 +3,12 @@ const { authenticateSocket } = require("../Middleware/userAuth");
 const {
     getChannels,
     searchChannels,
-    friendsInfo,
+    contacts,
 } = require("../controllers/channel");
 const { createMessage, getMessages } = require("../controllers/messages");
+// FIXME: fix userStatus function
 const {
-    offlineIndicator,
-    onlineIndicator,
-    userStatus,
+    // userStatus,
 } = require("../controllers/userAccount");
 
 const io = new Server({
@@ -27,9 +26,7 @@ io.use(authenticateSocket);
 
 io.on("connection", async (socket) => {
     socket.userId = socket.decoded.userId;
-    userStatus(socket);
-    offlineIndicator(io, socket);
-    onlineIndicator(socket, io);
+    // userStatus(socket, io);
 });
 
 io.on("connection", (socket) => {
@@ -41,7 +38,7 @@ io.on("connection", (socket) => {
     //from controller/channel.js
     getChannels(socket);
     searchChannels(socket);
-    friendsInfo(socket);
+    contacts(socket);
 });
 
 module.exports = io;

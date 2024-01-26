@@ -110,82 +110,46 @@ const login = async (req, res) => {
         res.status(500).json({ message });
     }
 };
-/**
- *
- * @param {new Server} io
- * @param {Socket} socket
- */
-async function offlineIndicator(io, socket) {
-    const { userId } = socket.decoded;
-
-    socket.on("disconnect", async () => {
-        const status = new Date();
-        const userFound = await User.findByIdAndUpdate(
-            userId,
-            { lastSeen: status },
-            { new: true }
-        );
-        if (!userFound) return;
-
-        const channels = await Channel.find({
-            members: { $in: userFound._id },
-        });
-        channels.forEach((channel) => {
-            const members = channel.members;
-            members.forEach((member) => {
-                const memberId = member._id.toString();
-                if (memberId != userId) {
-                    io.to(memberId).volatile.emit(userEvents.status, {
-                        userId,
-                        status,
-                    });
-                }
-            });
-        });
-    });
-}
-/**
- *
- * @param {Socket} socket
- * @param {new Server} io
- * @returns
- */
-const onlineIndicator = async (socket, io) => {
-    const status = "online";
-    const { userId } = socket.decoded;
-    const userFound = await User.findByIdAndUpdate(
-        userId,
-        { lastSeen: status },
-        { new: true }
-    );
-    if (!userFound) return;
-    const channels = await Channel.find({ members: { $in: userFound._id } });
-    channels.forEach((channel) => {
-        const members = channel.members;
-        members.forEach((member) => {
-            const memberId = member._id.toString();
-            if (memberId != userId) {
-                io.to(memberId).volatile.emit(userEvents.status, {
-                    userId,
-                    status,
-                });
-            }
-        });
-    });
-};
-/**
- *
- * @param {Socket} socket
- */
-const userStatus = (socket) => {
-    socket.on(userEvents.status, async (data) => {
-        const userId = data;
-        const userFound = await User.findById(userId);
-        if (!userFound) return;
-        const status = userFound.lastSeen;
-        socket.emit(userEvents.status, { status, userId });
-    });
-};
+// TODO: work on user offline and online status.
+// /**
+//  *
+//  * @param {new Server} io
+//  * @param {Socket} socket
+//  */
+// const userStatus = async (socket) => {
+//     const roomName = "Status";
+//     try {
+//         let status = "Online";
+//         if (socket.connected) {
+//             const { userId } = socket.decoded;
+//             socket.join(roomName);
+//             const userFound = await User.findByIdAndUpdate(
+//                 userId,
+//                 { lastSeen: status },
+//                 { new: true }
+//             );
+//             if (!userFound) return;
+//             socket
+//                 .to(roomName)
+//                 .emit({ userId: userFound._id, status: userFound.lastSeen });
+//             return;
+//         } else {
+//             status = new Date();
+//             const { userId } = socket.decoded;
+//             socket.join(roomName);
+//             const userFound = await User.findByIdAndUpdate(
+//                 userId,
+//                 { lastSeen: status },
+//                 { new: true }
+//             );
+//             if (!userFound) return;
+//             socket
+//                 .to(roomName)
+//                 .emit({ userId: userFound._id, status: userFound.lastSeen });
+//             return;
+//         }
+//     } catch (error) {}
+// };
 /**
  *
  * @param {Socket} socket
@@ -257,8 +221,6 @@ async function updateUserAvatar(req, res) {
 module.exports = {
     signup,
     login,
-    offlineIndicator,
-    onlineIndicator,
     typing,
     userStatus,
     updateUserAvatar,
