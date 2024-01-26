@@ -222,6 +222,6 @@ module.exports = {
     signup,
     login,
     typing,
-    userStatus,
+    // userStatus,
     updateUserAvatar,
 };
