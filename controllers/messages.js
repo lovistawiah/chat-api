@@ -84,8 +84,6 @@ function addMembers(channelMembers) {
 
 async function newMessageAndSend(socket, channelId, loggedUserId, message, io) {
     try {
-        const mediaMsg = message;
-
         const messageCreated = await Messages.create({
             channelId,
             sender: loggedUserId,
@@ -102,8 +100,6 @@ async function newMessageAndSend(socket, channelId, loggedUserId, message, io) {
             messageCreated.message = url;
             await messageCreated.save();
         }
-        console.log(messageCreated.message);
-
         socket.join(channelId.toString());
 
         const messageEdited = {
