@@ -8,10 +8,10 @@ const storage = new Storage({
 const bucketName = "you-and-i-testing";
 const bucket = storage.bucket(bucketName);
 /**
- * 
- * @param {*} file 
- * @param {Types.ObjectId} id 
- * @returns 
+ *
+ * @param {*} file
+ * @param {Types.ObjectId} id
+ * @returns
  */
 async function saveAndGetUserProfileUrl(file, id) {
     let message;
@@ -32,11 +32,11 @@ async function saveAndGetUserProfileUrl(file, id) {
                 fileName: `profiles/${id}.${fileExtension}`,
                 buffer: file.buffer,
             };
-            saveProfile(fileObj.fileName, fileObj.buffer);
+            saveFile(fileObj.fileName, fileObj.buffer);
             const getSignedUrl = await getFileUrl(fileObj.fileName);
             // the url returns an array of one link,
-            const shortUrl = getSignedUrl[0].split("?")[0];
-            return shortUrl;
+
+            return getSignedUrl;
         }
     } catch (error) {
         message = new Error(error.message);
@@ -44,18 +44,18 @@ async function saveAndGetUserProfileUrl(file, id) {
     }
 }
 /**
- * 
- * @param {string} fileName 
- * @param {Buffer} contents 
+ *
+ * @param {string} fileName
+ * @param {Buffer} contents
  */
-async function saveProfile(fileName, contents) {
+async function saveFile(fileName, contents) {
     await bucket.file(fileName).save(contents);
 }
 
 /**
- * 
- * @param {string} fileName 
- * @returns 
+ *
+ * @param {string} fileName
+ * @returns
  */
 async function getFileUrl(fileName) {
     const urlOptions = {
@@ -63,7 +63,11 @@ async function getFileUrl(fileName) {
         action: "read",
         expires: Date.now() + 365 * 24 * 60 * 60 * 1000,
     };
-    const url = bucket.file(fileName).getSignedUrl(urlOptions);
-    return url;
+    const [url] = await storage
+        .bucket(bucketName)
+        .file(fileName)
+        .getSignedUrl(urlOptions);
+    const shortUrl = url.split("?")[0];
+    return shortUrl;
 }
-module.exports = { saveAndGetUserProfileUrl };
+module.exports = { saveAndGetUserProfileUrl, saveFile, getFileUrl };
