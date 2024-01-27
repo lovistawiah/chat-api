@@ -1,14 +1,15 @@
 const userEvents = {
-  status: "status",
-  typing: "typing",
-  errorMessage: "errorMessage",
+    status: "status",
+    typing: "typing",
+    errorMessage: "errorMessage",
 };
 
 const channelEvents = {
-  channelAndLastMessage: "channelAndLastMessage",
-  search: "search",
-  contacts: "contacts",
-  errorMessage: "errorMessage",
+    channelAndLastMessage: "channelAndLastMessage",
+    search: "search",
+    contacts: "contacts",
+    searchChats: "searchChats",
+    errorMessage: "errorMessage",
 };
 
 const messageEvents = {
@@ -20,7 +21,7 @@ const messageEvents = {
 };
 
 module.exports = {
-  userEvents,
-  channelEvents,
-  messageEvents,
+    userEvents,
+    channelEvents,
+    messageEvents,
 };

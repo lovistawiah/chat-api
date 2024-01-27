@@ -4,6 +4,7 @@ const {
     getChannels,
     searchChannels,
     contacts,
+    searchChats,
 } = require("../controllers/channel");
 const { createMessage, getMessages } = require("../controllers/messages");
 // FIXME: fix userStatus function
@@ -39,6 +40,7 @@ io.on("connection", (socket) => {
     getChannels(socket);
     searchChannels(socket);
     contacts(socket);
+    searchChats(socket);
 });
 
 module.exports = io;

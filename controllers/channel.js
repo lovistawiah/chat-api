@@ -62,7 +62,6 @@ const getChannels = (socket) => {
 
                         const lastMessageDetails = messages.pop();
                         const messageInfo = {
-                            // the content of the last message of the channel
                             lastMessage: lastMessageDetails.message,
                             sender: lastMessageDetails.sender,
                             createdAt: lastMessageDetails.createdAt,
@@ -90,8 +89,6 @@ const getChannels = (socket) => {
  *
  * @param {Socket} socket
  */
-
-// add search function to both fronted and backend
 const searchChannels = (socket) => {
     socket.on(channelEvents.search, async (searchValue) => {
         const { userId } = socket.decoded;
@@ -122,6 +119,7 @@ const searchChannels = (socket) => {
         }
     });
 };
+
 /**
  *
  * @param {Socket} socket
@@ -195,9 +193,79 @@ const findOrCreateChannel = async (members) => {
         };
     }
 };
+
+/**
+ * @param {Socket} socket
+ */
+const searchChats = (socket) => {
+    const { userId } = socket.decoded;
+    try {
+        socket.on(channelEvents.searchChats, async (searchValue) => {
+            if (
+                searchValue.includes("+") ||
+                searchValue.includes("-") ||
+                searchValue.includes("|") ||
+                searchValue.includes("\\") ||
+                searchValue.includes("=")
+            ) {
+                return;
+            }
+            // check channels that belong to the user Id
+            const searchChannels = await Channel.find({
+                members: { $in: userId },
+            })
+                .populate([
+                    {
+                        path: "members",
+                        model: "user",
+                    },
+                    {
+                        path: "messages",
+                        model: "message",
+                    },
+                ])
+                .select(["username", "messages"]);
+            let searchResults = [];
+            searchChannels?.map((channel) => {
+                const otherUser = channel.members.filter(
+                    (user) =>
+                        user._id !== userId &&
+                        user.username.includes(searchValue.trim())
+                )[0];
+                if (!otherUser) return;
+                const lastMessage = channel.messages.pop();
+                const channelInfo = {
+                    channelId: channel._id,
+                };
+                const messageInfo = {
+                    lastMessage: lastMessage.message,
+                    sender: lastMessage.sender,
+                    createdAt: lastMessage.createdAt,
+                };
+                const userInfo = {
+                    userId: otherUser._id,
+                    username: otherUser.username,
+                    avatarUrl: otherUser.avatarUrl,
+                };
+                searchResults.push({
+                    channelInfo,
+                    messageInfo,
+                    userInfo,
+                });
+            });
+            if (searchResults.length < 1) {
+                searchResults = "no chats found";
+            }
+            socket.emit(channelEvents.channelAndLastMessage, searchResults);
+        });
+    } catch (error) {
+        socketError(socket, channelEvents.errorMessage, error.message);
+    }
+};
 module.exports = {
     getChannels,
     searchChannels,
     contacts,
+    searchChats,
     findOrCreateChannel,
 };
