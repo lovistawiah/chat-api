@@ -51,12 +51,12 @@ const signup = async (req, res) => {
             return;
         }
         message = "account created";
-        res.status(200).json({ message });
+        const userId = user._id;
+        res.status(200).json({ message, userId });
         return;
     } catch (err) {
         let StatusCode = 500;
         message = "Internal Server Error";
-
         if (err.code == 11000) {
             const errValue = Object.keys(err.keyValue);
             message = `${errValue} already exists`;
