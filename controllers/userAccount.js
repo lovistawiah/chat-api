@@ -1,10 +1,10 @@
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const User = require("../models/Users");
 const { userEvents } = require("../utils/index");
 const { getUserNameFromEmail } = require("../utils/user");
 const { saveAndGetUserProfileUrl } = require("../utils/modifyProfilePic");
 const { Socket } = require("socket.io");
+const { createToken } = require("../utils/token");
 
 /**
  *
@@ -35,11 +35,13 @@ const signup = async (req, res) => {
         const defaultUrl = "https://robohash.org/" + uniqueUserName;
         password = await bcrypt.hash(password, 10);
 
+        const bio = `hey there, I'm on You and I`;
         const account = {
             email,
             password,
             username: uniqueUserName,
             avatarUrl: defaultUrl,
+            bio,
         };
 
         const user = await User.create(account);
@@ -50,8 +52,14 @@ const signup = async (req, res) => {
             return;
         }
         message = "account created";
-        const userId = user._id;
-        res.status(200).json({ message, userId });
+        const userInfo = {
+            userId: user._id,
+            username: user.username,
+            avatarUrl: user.avatarUrl,
+            bio: user.bio,
+        };
+        // TODO: check if userInfo {} is correct in login function
+        res.status(200).json({ message, userInfo });
         return;
     } catch (err) {
         let StatusCode = 500;
@@ -95,18 +103,97 @@ const login = async (req, res) => {
             res.status(401).json({ message });
             return;
         }
-        const token = jwt.sign(
-            { userInfo: { userId: user._id, username: user.username } },
-            process.env.JWT_SECRET,
-            {
-                expiresIn: "30d",
-            }
-        );
+        const userInfo = {
+            userId: user._id,
+            username: user.username,
+        };
+        const token = createToken({ userInfo });
         res.status(200).json({ message: "ok", token });
         return;
     } catch (err) {
         message = "Internal Server Error";
         res.status(500).json({ message });
+    }
+};
+
+/**
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {Promise<void>}
+ */
+async function updateUserAvatar(req, res) {
+    const file = req.file;
+    const { userId } = req.body;
+    let message = "";
+    if (!file) {
+        message = "profile pic not selected";
+        res.status(400).json({ message });
+        return;
+    }
+    const url = await saveAndGetUserProfileUrl(file, userId);
+    if (url instanceof Error) {
+        message = url.message;
+        res.status(400).json({ message });
+        return;
+    } else {
+        const findUser = await User.findById(userId);
+        if (!findUser) {
+            message = "user does not exist";
+            res.status(400).json({ message });
+            return;
+        } else {
+            findUser.avatarUrl = url;
+            await findUser.save();
+            message = "profile updated!";
+            res.status(200).json({ url, message });
+            return;
+        }
+    }
+}
+
+/**
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {Promise<void>}
+ */
+const updateUserInfo = async (req, res) => {
+    const { userId, username } = req.body;
+    try {
+        let message = "";
+        console.log(userId, username);
+        if (!userId) {
+            message = "User not found";
+            res.status(304).json({ message });
+            return;
+        }
+        if (!username) {
+            message = "username and bio not updated";
+            res.status(304).json({ message });
+            return;
+        }
+        const findUserAndUpdate = await User.findByIdAndUpdate(
+            userId,
+            {
+                username,
+            },
+            { new: true }
+        );
+        if (findUserAndUpdate) {
+            const userInfo = {
+                username: findUserAndUpdate.username,
+                bio: findUserAndUpdate.bio,
+            };
+            message = "user updated successfully";
+            res.status(200).json({ message, userInfo });
+        }
+    } catch (error) {
+        let statusCode = 500;
+        message = error.message;
+        if (error.code === 11000) {
+            message = `${username} already exists`;
+            statusCode = 401;
+        }
+        res.status(statusCode).json({ message });
     }
 };
 // TODO: work on user offline and online status.
@@ -172,45 +259,11 @@ const typing = (socket) => {
     });
 };
 
-/**
- * @param {Request} req
- * @param {Response} res
- * @returns {void}
- */
-async function updateUserAvatar(req, res) {
-    const file = req.file;
-    const { userId } = req.body;
-    let message = "";
-    if (!file) {
-        message = "profile pic not selected";
-        res.status(400).json({ message });
-        return;
-    }
-    const url = await saveAndGetUserProfileUrl(file, userId);
-    if (url instanceof Error) {
-        message = url.message;
-        res.status(400).json({ message });
-        return;
-    } else {
-        const findUser = await User.findById(userId);
-        if (!findUser) {
-            message = "user does not exist";
-            res.status(400).json({ message });
-            return;
-        } else {
-            findUser.avatarUrl = url;
-            await findUser.save();
-            message = "profile updated!";
-            res.status(200).json({ url, message });
-            return;
-        }
-    }
-}
-
 module.exports = {
     signup,
     login,
     typing,
     // userStatus,
     updateUserAvatar,
+    updateUserInfo,
 };
