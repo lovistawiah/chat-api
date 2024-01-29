@@ -16,28 +16,19 @@ const bucket = storage.bucket(bucketName);
 async function saveAndGetUserProfileUrl(file, id) {
     let message;
     try {
-        if (!file) {
-            message = new Error('"file not uploaded, try again!"');
+        const fileExtension = file.mimetype.split("/")[1];
+        const extensions = ["jpeg", "png", "webp"];
+        if (!extensions.includes(fileExtension)) {
+            message = new Error("unsupported image file");
             return message;
-        } else {
-            const fileExtension = file.mimetype.split("/")[1];
-            const extensions = ["jpeg", "png", "webp"];
-
-            if (!extensions.includes(fileExtension)) {
-                message = new Error("unsupported image file");
-                return message;
-            }
-
-            const fileObj = {
-                fileName: `profiles/${id}.${fileExtension}`,
-                buffer: file.buffer,
-            };
-            saveFile(fileObj.fileName, fileObj.buffer);
-            const getSignedUrl = await getFileUrl(fileObj.fileName);
-            // the url returns an array of one link,
-
-            return getSignedUrl;
         }
+        const fileObj = {
+            fileName: `profiles/${id}.${fileExtension}`,
+            buffer: file.buffer,
+        };
+        saveFile(fileObj.fileName, fileObj.buffer);
+        const getSignedUrl = await getFileUrl(fileObj.fileName);
+        return getSignedUrl;
     } catch (error) {
         message = new Error(error.message);
         return message;

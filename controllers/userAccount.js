@@ -1,11 +1,10 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/Users");
-const Channel = require("../models/Channel");
 const { userEvents } = require("../utils/index");
 const { getUserNameFromEmail } = require("../utils/user");
 const { saveAndGetUserProfileUrl } = require("../utils/modifyProfilePic");
-const { Socket, Server } = require("socket.io");
+const { Socket } = require("socket.io");
 
 /**
  *
@@ -180,18 +179,8 @@ const typing = (socket) => {
  */
 async function updateUserAvatar(req, res) {
     const file = req.file;
-    const userId = req.userId;
-    const { username } = req.body;
+    const { userId } = req.body;
     let message = "";
-
-    if (username) {
-        const foundUsername = await User.find({ username });
-        if (foundUsername) {
-            message = "username already exist";
-            res.status(400).json({ message });
-            return;
-        }
-    }
     if (!file) {
         message = "profile pic not selected";
         res.status(400).json({ message });
@@ -212,7 +201,7 @@ async function updateUserAvatar(req, res) {
             findUser.avatarUrl = url;
             await findUser.save();
             message = "profile updated!";
-            res.status(200).json({ url });
+            res.status(200).json({ url, message });
             return;
         }
     }
