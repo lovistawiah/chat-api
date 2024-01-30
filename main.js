@@ -15,10 +15,9 @@ const server = http.createServer(app); // Attach Express app to the HTTP server
 const MONGO_URI = process.env.MONGO_URI;
 
 // use only in dev mode
-if (process.env.NODE_ENV === "production") {
-    app.use(morgan("dev"));
-    const morgan = require("morgan");
-}
+// app.use(morgan("dev"));
+// const morgan = require("morgan");
+
 app.use(cors({ origin: true }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
