@@ -4,7 +4,10 @@ require("dotenv").config();
 const cors = require("cors");
 
 // use only in dev mode
-const morgan = require("morgan");
+if (process.env.NODE_ENV === "production") {
+    app.use(morgan("dev"));
+    const morgan = require("morgan");
+}
 const http = require("http");
 
 //local files
@@ -18,9 +21,6 @@ const server = http.createServer(app); // Attach Express app to the HTTP server
 
 const MONGO_URI = process.env.MONGO_URI;
 
-if (process.env.NODE_ENV === "production") {
-    app.use(morgan("dev"));
-}
 app.use(cors({ origin: true }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
