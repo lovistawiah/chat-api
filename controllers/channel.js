@@ -3,8 +3,6 @@ const { socketError } = require("../ioInstance/socketError");
 const Channel = require("../models/Channel");
 const User = require("../models/Users");
 const { channelEvents } = require("../utils");
-// TODO: send profile info to client
-// TODO: profile page setting in client
 /**
  *
  * @param {Socket} socket
