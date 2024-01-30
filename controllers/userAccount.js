@@ -144,7 +144,6 @@ async function updateUserAvatar(req, res) {
                 return;
             } else {
                 findUser.avatarUrl = url;
-                console.log(url);
                 await findUser.save();
                 message = "profile updated!";
                 res.status(200).json({ url, message });
@@ -166,7 +165,6 @@ const updateUserInfo = async (req, res) => {
     const { userId, username } = req.body;
     try {
         let message = "";
-        console.log(userId, username);
         if (!userId) {
             message = "User not found";
             res.status(304).json({ message });
@@ -177,20 +175,21 @@ const updateUserInfo = async (req, res) => {
             res.status(304).json({ message });
             return;
         }
-        const findUserAndUpdate = await User.findByIdAndUpdate(
+        const updatedUser = await User.findByIdAndUpdate(
             userId,
             {
                 username,
             },
             { new: true }
         );
-        if (findUserAndUpdate) {
+        if (updatedUser) {
             const userInfo = {
-                username: findUserAndUpdate.username,
-                bio: findUserAndUpdate.bio,
+                userId: updatedUser._id,
+                username: updatedUser.username,
             };
-            message = "user updated successfully";
-            res.status(200).json({ message, userInfo });
+            const token = createToken({ userInfo });
+            message = "username updated successfully";
+            res.status(200).json({ message, userInfo, token });
         }
     } catch (error) {
         let statusCode = 500;

@@ -1,22 +1,22 @@
 const mailer = require("nodemailer");
 
 function generateSixRandomNumbers() {
-  let numbers = "";
-  for (let i = 0; i < 6; i++) {
-    const randomNumber = Math.floor(Math.random() * 9) + 1;
-    numbers += randomNumber;
-  }
-  return numbers;
+    let numbers = "";
+    for (let i = 0; i < 6; i++) {
+        const randomNumber = Math.floor(Math.random() * 9) + 1;
+        numbers += randomNumber;
+    }
+    return numbers;
 }
 const expiryDate = () => {
-  const today = new Date();
-  const date = today.getDate();
-  const codeDate = new Date(today.setDate(date + 1));
-  return codeDate;
+    const today = new Date();
+    const date = today.getDate();
+    const codeDate = new Date(today.setDate(date + 1));
+    return codeDate;
 };
 
 function verifyMessage(code) {
-  return (content = `<!DOCTYPE html>
+    return (content = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -49,37 +49,33 @@ function verifyMessage(code) {
 </html>`);
 }
 
-
 function sendEmailCode(receiver, code) {
-  const pass = process.env.GMAIL_PASS;
-  const sender = process.env.GMAIL_CLIENT;
-  console.log(receiver, code);
-  if (!receiver || !verifyMessage || !code) {
-    console.log("error");
-    return;
-  }
-  let mailTransporter = mailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: sender,
-      pass: pass,
-    },
-  });
+    const pass = process.env.GMAIL_PASS;
+    const sender = process.env.GMAIL_CLIENT;
+    if (!receiver || !verifyMessage || !code) {
+        return;
+    }
+    let mailTransporter = mailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: sender,
+            pass: pass,
+        },
+    });
 
-  let mailDetails = {
-    from: sender,
-    to: receiver,
-    subject: `Verification Code:${code} from You and I`,
-    html: verifyMessage(code),
-  };
+    let mailDetails = {
+        from: sender,
+        to: receiver,
+        subject: `Verification Code:${code} from You and I`,
+        html: verifyMessage(code),
+    };
 
-  mailTransporter.sendMail(mailDetails, function (err, data) {
-    if (err) console.error(err);
-    return data;
-  });
+    mailTransporter.sendMail(mailDetails, function (err, data) {
+        return data;
+    });
 }
 module.exports = {
-  generateSixRandomNumbers
-  ,expiryDate,
-  sendEmailCode
-}
+    generateSixRandomNumbers,
+    expiryDate,
+    sendEmailCode,
+};

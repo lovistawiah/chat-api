@@ -11,4 +11,13 @@ function createToken(userInfo) {
     return token;
 }
 
-module.exports = { createToken };
+function verifyToken(token) {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    if (!payload) {
+        const err = new Error("invalid token");
+        return err;
+    }
+    return payload.userInfo;
+}
+
+module.exports = { createToken, verifyToken };

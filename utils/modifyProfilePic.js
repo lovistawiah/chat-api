@@ -6,7 +6,7 @@ const storage = new Storage({
     keyFilename: "./keyFile.json",
 });
 
-const bucketName = "you-and-testing";
+const bucketName = "you-and-i-testing";
 const bucket = storage.bucket(bucketName);
 /**
  *
@@ -54,7 +54,7 @@ async function getFileUrl(fileName) {
         const urlOptions = {
             version: "v4",
             action: "read",
-            expires: Date.now() + 365 * 24 * 60 * 60 * 1000,
+            expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
         };
         const [url] = await storage
             .bucket(bucketName)

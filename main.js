@@ -35,7 +35,7 @@ async function start(url) {
             console.log(`listening on http://localhost:${PORT}`);
         });
     } catch (err) {
-        console.log(err.message);
+        throw new Error(err.message);
     }
 }
 
