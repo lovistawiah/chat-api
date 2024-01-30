@@ -122,32 +122,38 @@ const login = async (req, res) => {
  * @returns {Promise<void>}
  */
 async function updateUserAvatar(req, res) {
-    const file = req.file;
-    const { userId } = req.body;
-    let message = "";
-    if (!file) {
-        message = "profile pic not selected";
-        res.status(400).json({ message });
-        return;
-    }
-    const url = await saveAndGetUserProfileUrl(file, userId);
-    if (url instanceof Error) {
-        message = url.message;
-        res.status(400).json({ message });
-        return;
-    } else {
-        const findUser = await User.findById(userId);
-        if (!findUser) {
-            message = "user does not exist";
+    try {
+        const file = req.file;
+        const { userId } = req.body;
+        let message = "";
+        if (!file) {
+            message = "profile pic not selected";
+            res.status(400).json({ message });
+            return;
+        }
+        const url = await saveAndGetUserProfileUrl(file, userId);
+        if (url instanceof Error) {
+            message = url.message;
             res.status(400).json({ message });
             return;
         } else {
-            findUser.avatarUrl = url;
-            await findUser.save();
-            message = "profile updated!";
-            res.status(200).json({ url, message });
-            return;
+            const findUser = await User.findById(userId);
+            if (!findUser) {
+                message = "user does not exist";
+                res.status(400).json({ message });
+                return;
+            } else {
+                findUser.avatarUrl = url;
+                console.log(url);
+                await findUser.save();
+                message = "profile updated!";
+                res.status(200).json({ url, message });
+                return;
+            }
         }
+    } catch (error) {
+        const message = error.message;
+        res.status(500).json({ message });
     }
 }
 
