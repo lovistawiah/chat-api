@@ -18,7 +18,9 @@ const server = http.createServer(app); // Attach Express app to the HTTP server
 
 const MONGO_URI = process.env.MONGO_URI;
 
-app.use(morgan("dev"));
+if (process.env.NODE_ENV === "production") {
+    app.use(morgan("dev"));
+}
 app.use(cors({ origin: true }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
