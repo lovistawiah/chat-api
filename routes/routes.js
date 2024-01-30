@@ -6,7 +6,7 @@ const upload = multer({ storage: storage });
 const {
     signup,
     login,
-    updateUserAvatar,
+    // updateUserAvatar,
     updateUserInfo,
 } = require("../controllers/userAccount");
 router.route("/signup").post(signup);
