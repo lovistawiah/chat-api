@@ -45,31 +45,22 @@ const getChannels = (socket) => {
                 );
             });
 
-            userChannels.map((channel) => {
+            userChannels.forEach((channel) => {
                 const { members, messages } = channel;
+                const lastMsgInfo = messages.pop();
+
                 members.forEach((member) => {
                     if (member._id.toString() != userId) {
-                        const userInfo = {
+                        const info = {
+                            channelId: channel._id,
                             userId: member._id,
                             username: member.username,
                             avatarUrl: member.avatarUrl,
+                            lastMessage: lastMsgInfo.message,
+                            createdAt: lastMsgInfo.createdAt,
                         };
 
-                        const channelInfo = {
-                            channelId: channel._id,
-                        };
-
-                        const lastMessageDetails = messages.pop();
-                        const messageInfo = {
-                            lastMessage: lastMessageDetails.message,
-                            sender: lastMessageDetails.sender,
-                            createdAt: lastMessageDetails.createdAt,
-                        };
-                        channelAndLastMessage.push({
-                            channelInfo,
-                            userInfo,
-                            messageInfo,
-                        });
+                        channelAndLastMessage.push(info);
                     }
                 });
             });
