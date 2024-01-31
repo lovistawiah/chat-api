@@ -130,14 +130,12 @@ const contacts = (socket) => {
             await Promise.all(
                 friends.map(async (friend) => {
                     const channel = await Channel.find({
-                        members: { $in: [friend._id] },
+                        members: { $all: [friend._id, userId] },
                     });
 
                     if (!channel.length) {
                         contacts.push(friend);
-                        return;
                     }
-
                     if (channel[0]?._id) {
                         contacts.push({
                             _id: friend._id,
@@ -183,6 +181,36 @@ const findOrCreateChannel = async (members) => {
         };
     }
 };
+async function findChannel(members) {
+    try {
+        const foundChannel = await Channel.findOne({
+            members: { $all: members },
+        });
+        if (foundChannel) {
+            return {
+                channelId: foundChannel._id,
+                members: foundChannel.members,
+            };
+        }
+        return "channels not found";
+    } catch (err) {
+        const message = err.message;
+    }
+}
+
+async function createNewChannel(members) {
+    try {
+        const createdChannel = await Channel.create(members);
+        if (!createdChannel) return "channel not created";
+        return {
+            channelId: createdChannel._id,
+            members: createdChannel.members,
+        };
+    } catch (err) {
+        const message = err.message;
+        return message;
+    }
+}
 
 /**
  * @param {Socket} socket
