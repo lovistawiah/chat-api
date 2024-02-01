@@ -58,7 +58,6 @@ const signup = async (req, res) => {
             avatarUrl: user.avatarUrl,
             bio: user.bio,
         };
-        // TODO: check if userInfo {} is correct in login function
         res.status(200).json({ message, userInfo });
         return;
     } catch (err) {
@@ -121,46 +120,6 @@ const login = async (req, res) => {
  * @param {Response} res
  * @returns {Promise<void>}
  */
-// async function updateUserAvatar(req, res) {
-//     try {
-//         const file = req.file;
-//         const { userId } = req.body;
-//         let message = "";
-//         if (!file) {
-//             message = "profile pic not selected";
-//             res.status(400).json({ message });
-//             return;
-//         }
-//         const url = await saveAndGetUserProfileUrl(file, userId);
-//         if (url instanceof Error) {
-//             message = url.message;
-//             res.status(400).json({ message });
-//             return;
-//         } else {
-//             const findUser = await User.findById(userId);
-//             if (!findUser) {
-//                 message = "user does not exist";
-//                 res.status(400).json({ message });
-//                 return;
-//             } else {
-//                 findUser.avatarUrl = url;
-//                 await findUser.save();
-//                 message = "profile updated!";
-//                 res.status(200).json({ url, message });
-//                 return;
-//             }
-//         }
-//     } catch (error) {
-//         const message = error.message;
-//         res.status(500).json({ message });
-//     }
-// }
-
-/**
- * @param {Request} req
- * @param {Response} res
- * @returns {Promise<void>}
- */
 const updateUserInfo = async (req, res) => {
     const { userId, username } = req.body;
     try {
@@ -201,46 +160,6 @@ const updateUserInfo = async (req, res) => {
         res.status(statusCode).json({ message });
     }
 };
-// TODO: work on user offline and online status.
-// /**
-//  *
-//  * @param {new Server} io
-//  * @param {Socket} socket
-//  */
-// const userStatus = async (socket) => {
-//     const roomName = "Status";
-//     try {
-//         let status = "Online";
-//         if (socket.connected) {
-//             const { userId } = socket.decoded;
-//             socket.join(roomName);
-//             const userFound = await User.findByIdAndUpdate(
-//                 userId,
-//                 { lastSeen: status },
-//                 { new: true }
-//             );
-//             if (!userFound) return;
-//             socket
-//                 .to(roomName)
-//                 .emit({ userId: userFound._id, status: userFound.lastSeen });
-//             return;
-//         } else {
-//             status = new Date();
-//             const { userId } = socket.decoded;
-//             socket.join(roomName);
-//             const userFound = await User.findByIdAndUpdate(
-//                 userId,
-//                 { lastSeen: status },
-//                 { new: true }
-//             );
-//             if (!userFound) return;
-//             socket
-//                 .to(roomName)
-//                 .emit({ userId: userFound._id, status: userFound.lastSeen });
-//             return;
-//         }
-//     } catch (error) {}
-// };
 /**
  *
  * @param {Socket} socket
@@ -248,11 +167,11 @@ const updateUserInfo = async (req, res) => {
 const typing = (socket) => {
     socket.on(userEvents.typing, async (data) => {
         let receiver;
-        const { channelId, userId } = data;
-        const channelMembers = await findChannel(channelId);
-        if (!channelMembers) return;
+        const { chatId, userId } = data;
+        // const chatMembers = await findChat(chatId);
+        if (!chatMembers) return;
 
-        channelMembers.forEach((member) => {
+        chatMembers.forEach((member) => {
             if (member._id.toString() != socket.userId) {
                 receiver = member._id.toString();
             }
@@ -260,7 +179,7 @@ const typing = (socket) => {
         const message = "typing...";
         socket
             .to(receiver)
-            .volatile.emit(userEvents.typing, { message, channelId, userId });
+            .volatile.emit(userEvents.typing, { message, chatId, userId });
     });
 };
 

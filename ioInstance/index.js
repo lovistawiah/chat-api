@@ -1,17 +1,12 @@
 const { Server } = require("socket.io");
 const { authenticateSocket } = require("../Middleware/userAuth");
-const {
-    getChannels,
-    searchChannels,
-    contacts,
-    searchChats,
-    joinChannels,
-} = require("../controllers/channel");
+const { getChats, oldnNewChats, searchChats } = require("../controllers/chat");
 const {
     createMessage,
     getMessages,
     deleteMessage,
 } = require("../controllers/messages");
+
 // FIXME: fix userStatus function
 const {
     // userStatus,
@@ -27,7 +22,6 @@ io.use(authenticateSocket);
 
 io.on("connection", async (socket) => {
     socket.userId = socket.decoded.userId;
-    // userStatus(socket, io);
 });
 
 io.on("connection", (socket) => {
@@ -37,12 +31,11 @@ io.on("connection", (socket) => {
     deleteMessage(socket, io);
 });
 io.on("connection", (socket) => {
-    //from controller/channel.js
-    getChannels(socket);
-    searchChannels(socket);
-    contacts(socket);
+    //from controller/chat.js
+    getChats(socket);
     searchChats(socket);
-    joinChannels(socket);
+    oldnNewChats(socket);
+    searchChats(socket);
 });
 
 module.exports = io;

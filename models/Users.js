@@ -29,16 +29,16 @@ const usrSchema = new mongoose.Schema(
             privKey: String,
             pubKey: String,
         },
-        channels: [
+        chats: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "channel",
+                ref: "chat",
             },
         ],
     },
     { timestamps: true }
 );
-userSchema.index({ channels: 1, "channels.messages": -1 });
+usrSchema.index({ chats: 1, "chats.messages": -1 });
 
 const User = mongoose.model("user", usrSchema);
 

@@ -1,6 +1,6 @@
-const Channel = require("../models/Channel");
+const Chat = require("../models/Chat");
 const Messages = require("../models/Messages");
-const { createChannel, findChannel } = require("./channel");
+const { createChat, findChat } = require("./chat");
 const { msgEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
 const { Socket, Server } = require("socket.io");
@@ -16,7 +16,7 @@ const getMessages = (socket) => {
         if (!chatId) return;
         try {
             let msgDate;
-            const chatMsgs = await Channel.findOne({
+            const chatMsgs = await Chat.findOne({
                 _id: chatId,
             }).populate({
                 path: "messages",
@@ -42,7 +42,7 @@ const getMessages = (socket) => {
                     sender,
                     msgDate,
                 };
-                socket.emit(msgEvents.channelMessages, msg);
+                socket.emit(msgEvents.msgs, msg);
             });
         } catch (err) {
             const msg = err.message;
@@ -65,21 +65,18 @@ const createMessage = async (io, socket) => {
             let chatId;
             const mems = [lgUsrId, userId];
 
-            const fndChat = await findChannel(mems);
+            const fndChat = await findChat(mems);
             if (fndChat.chatId) {
                 chatId = fndChat.chatId;
                 chatMems = fndChat.members;
             } else {
-                const createdChat = await createChannel(mems);
+                const createdChat = await createChat(mems);
 
                 if (createdChat.chatId) {
                     chatId = createdChat.chatId;
                     chatMems = createdChat.members;
                 }
             }
-
-            const msgReceivers = addMembers(chatMems);
-            if (!msgReceivers) return;
 
             saveMessageAndSend({ socket, chatId, lgUsrId, msg, io });
         });
@@ -91,7 +88,7 @@ const createMessage = async (io, socket) => {
 
 /**
  *
- * @param {new Server()} io
+ * @param {new Server} io
  * @param {Socket} socket
  */
 const deleteMessage = async (socket, io) => {
@@ -100,8 +97,8 @@ const deleteMessage = async (socket, io) => {
     socket.on(msgEvents.deleteMessage, async (data) => {
         const { msgId, chatId } = data;
         const msgUpdated = await Message.findOne({
-            channelId: chatId,
             _id: msgId,
+            chatId,
         });
 
         if (!msgUpdated) {
@@ -117,23 +114,15 @@ const deleteMessage = async (socket, io) => {
             sender: userId,
             createdAt: msgUpdated.updatedAt,
         };
+
+        io.to(chatId.toString()).emit(msgEvents.delMsg, msg);
     });
 };
 
 /**
  *
- * @param {[Types.ObjectId]} channelMembers
- * @returns {[string]}
- */
-function addMembers(channelMembers) {
-    return channelMembers.map((channelMember) => {
-        return channelMember._id.toString();
-    });
-}
-/**
- *
  * @param {Socket} socket
- * @param {mongoose.Types.ObjectId} channelId
+ * @param {mongoose.Types.ObjectId} chatId
  * @param {mongoose.Types.ObjectId} loggedUserId
  * @param {string} message
  *@param {new Server} io
@@ -142,7 +131,7 @@ function addMembers(channelMembers) {
 async function saveMessageAndSend({ socket, chatId, lgUsrId, msg, io }) {
     try {
         const msgCreated = await Messages.create({
-            channelId: chatId,
+            chatId: chatId,
             sender: lgUsrId,
             message: msg,
         });
@@ -152,12 +141,12 @@ async function saveMessageAndSend({ socket, chatId, lgUsrId, msg, io }) {
             message: msgCreated.message,
             sender: msgCreated.sender,
             createdAt: msgCreated.createdAt,
-            channelId: msgCreated.channelId,
+            chatId: msgCreated.chatId,
         };
 
         io.to(chatId.toString()).emit(msgEvents.sndMsg, messageEdited);
 
-        await Channel.findByIdAndUpdate(chatId, {
+        await Chat.findByIdAndUpdate(chatId, {
             $push: { messages: msgCreated._id },
         });
     } catch (e) {

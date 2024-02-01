@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const privateChannelSchema = new mongoose.Schema(
+const privateChatSchema = new mongoose.Schema(
     {
         members: [
             {
@@ -18,4 +18,4 @@ const privateChannelSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-module.exports = privateChannelSchema;
+module.exports = privateChatSchema;
