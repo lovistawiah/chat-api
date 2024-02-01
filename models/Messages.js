@@ -18,9 +18,10 @@ const messageSchema = new mongoose.Schema(
         reaction: {
             type: String,
         },
-        isDeleted: {
-            type: Boolean,
-            default: false,
+        info: {
+            type: String,
+            enum: ["created", "edited", "deleted"],
+            default: "created",
         },
     },
     { timestamps: true }

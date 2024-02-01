@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const channelSchema = new mongoose.Schema(
+const chatSchema = new mongoose.Schema(
     {
         channelType: {
             type: String,
@@ -31,6 +31,6 @@ const channelSchema = new mongoose.Schema(
     },
     { timestamps: true }
 );
-const Channel = mongoose.model("channel", channelSchema);
+const Chat = mongoose.model("chat", chatSchema);
 
-module.exports = Channel;
+module.exports = Chat;

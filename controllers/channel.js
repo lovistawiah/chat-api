@@ -2,14 +2,14 @@ const { Socket } = require("socket.io");
 const { socketError } = require("../ioInstance/socketError");
 const Channel = require("../models/Channel");
 const User = require("../models/Users");
-const { channelEvents } = require("../utils");
+const { chatEvents } = require("../utils");
 /**
  *
  * @param {Socket} socket
  * @returns
  */
 const getChannels = (socket) => {
-    socket.on(channelEvents.channelAndLastMessage, async () => {
+    socket.on(chatEvents.chatLastMsg, async () => {
         const channelAndLastMessage = [];
         let message = "";
         try {
@@ -30,7 +30,7 @@ const getChannels = (socket) => {
                 .select(["username", "messages"]);
             if (userChannels.length == 0) {
                 const message = "no channels found";
-                socket.emit(channelEvents.channelAndLastMessage, message);
+                socket.emit(chatEvents.channelAndLastMessage, message);
                 return;
             }
             // sorting and return the channel's last message with the latest date
@@ -44,7 +44,6 @@ const getChannels = (socket) => {
                     new Date(lastMessageA.createdAt)
                 );
             });
-
             userChannels.forEach((channel) => {
                 const { members, messages } = channel;
                 const lastMsgInfo = messages.pop();
@@ -65,12 +64,12 @@ const getChannels = (socket) => {
                 });
             });
             socket.emit(
-                channelEvents.channelAndLastMessage,
+                chatEvents.channelAndLastMessage,
                 channelAndLastMessage
             );
         } catch (err) {
             message = err.message;
-            socketError(socket, channelEvents.errorMessage, message);
+            socketError(socket, chatEvents.errorMessage, message);
         }
     });
 };
@@ -80,7 +79,7 @@ const getChannels = (socket) => {
  * @param {Socket} socket
  */
 const searchChannels = (socket) => {
-    socket.on(channelEvents.search, async (searchValue) => {
+    socket.on(chatEvents.search, async (searchValue) => {
         const { userId } = socket.decoded;
         try {
             if (
@@ -102,10 +101,10 @@ const searchChannels = (socket) => {
             })
                 .select(["username", "avatarUrl"])
                 .sort("asc");
-            socket.emit(channelEvents.search, oldAndNewFriends);
+            socket.emit(chatEvents.search, oldAndNewFriends);
         } catch (err) {
             const message = err.message;
-            socketError(socket, channelEvents.errorMessage, message);
+            socketError(socket, chatEvents.errorMessage, message);
         }
     });
 };
@@ -117,7 +116,7 @@ const searchChannels = (socket) => {
 // get all old and new users except the logged in user.
 // if the the other user and the logged in user are in a channel add the channel id to the contact obj
 const contacts = (socket) => {
-    socket.on(channelEvents.contacts, async () => {
+    socket.on(chatEvents.contacts, async () => {
         try {
             const { userId } = socket.decoded;
             const contacts = [];
@@ -147,10 +146,10 @@ const contacts = (socket) => {
                 })
             );
 
-            socket.emit(channelEvents.contacts, contacts);
+            socket.emit(chatEvents.contacts, contacts);
         } catch (err) {
             const message = err.message;
-            socketError(socket, channelEvents.errorMessage, message);
+            socketError(socket, chatEvents.errorMessage, message);
         }
     });
 };
@@ -160,27 +159,6 @@ const contacts = (socket) => {
  * @param {[import("mongoose").ObjectId]} members
  *
  */
-const findOrCreateChannel = async (members) => {
-    const findChannel = await Channel.findOne({ members: { $all: members } });
-    if (findChannel) {
-        return {
-            channelId: findChannel._id,
-            channelMembers: findChannel.members,
-        };
-    } else {
-        const newChannel = await Channel.create({ members });
-        if (!newChannel) return;
-        newChannel.members.forEach(async (member) => {
-            await User.findByIdAndUpdate(member._id, {
-                $push: { channels: newChannel._id },
-            });
-        });
-        return {
-            channelId: newChannel._id,
-            channelMembers: newChannel.members,
-        };
-    }
-};
 async function findChannel(members) {
     try {
         const foundChannel = await Channel.findOne({
@@ -195,12 +173,18 @@ async function findChannel(members) {
         return "channels not found";
     } catch (err) {
         const message = err.message;
+        return message;
     }
 }
 
-async function createNewChannel(members) {
+/**
+ *
+ * @param {[import("mongoose").ObjectId]} members
+ *
+ */
+async function createChannel(members) {
     try {
-        const createdChannel = await Channel.create(members);
+        const createdChannel = await Channel.create({ members });
         if (!createdChannel) return "channel not created";
         return {
             channelId: createdChannel._id,
@@ -218,7 +202,7 @@ async function createNewChannel(members) {
 const searchChats = (socket) => {
     const { userId } = socket.decoded;
     try {
-        socket.on(channelEvents.searchChats, async (searchValue) => {
+        socket.on(chatEvents.searchChats, async (searchValue) => {
             if (
                 searchValue.includes("+") ||
                 searchValue.includes("-") ||
@@ -280,10 +264,21 @@ const searchChats = (socket) => {
         socketError(socket, channelEvents.errorMessage, error.message);
     }
 };
+
+async function joinChannels(socket) {
+    const userId = socket.userId;
+    const findChannels = await Channel.find({ members: { $in: [userId] } });
+    findChannels?.forEach((channel) => {
+        const channelId = channel._id;
+        socket.join(channelId.toString());
+    });
+}
 module.exports = {
     getChannels,
     searchChannels,
     contacts,
     searchChats,
-    findOrCreateChannel,
+    findChannel,
+    createChannel,
+    joinChannels,
 };

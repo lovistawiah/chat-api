@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema(
+const usrSchema = new mongoose.Schema(
     {
         username: {
             type: String,
@@ -40,6 +40,6 @@ const userSchema = new mongoose.Schema(
 );
 userSchema.index({ channels: 1, "channels.messages": -1 });
 
-const User = mongoose.model("user", userSchema);
+const User = mongoose.model("user", usrSchema);
 
 module.exports = User;

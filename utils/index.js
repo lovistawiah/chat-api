@@ -1,27 +1,26 @@
-const userEvents = {
+const usrEvents = {
     status: "status",
     typing: "typing",
-    errorMessage: "errorMessage",
+    errMsg: "errMsg",
 };
 
-const channelEvents = {
-    channelAndLastMessage: "channelAndLastMessage",
+const chatEvents = {
+    chatLastMsg: "chatLastMsg",
     search: "search",
-    contacts: "contacts",
+    newChats: "newChats",
     searchChats: "searchChats",
-    errorMessage: "errorMessage",
+    errMsg: "errMsg",
 };
-
-const messageEvents = {
-    sendMessage: "sendMessage",
-    deleteMessage: "deleteMessage",
-    offlineOnlineIndicator: "offlineOnlineIndicator",
-    channelMessages: "channelMessages",
-    errorMessage: "errorMessage",
+const msgEvents = {
+    sndMsg: "sndMsg",
+    delMsg: "delMsg",
+    liveStatus: "",
+    msgs: "msgs",
+    errMsg: "errMsg",
 };
 
 module.exports = {
-    userEvents,
-    channelEvents,
-    messageEvents,
+    usrEvents,
+    chatEvents,
+    msgEvents,
 };
