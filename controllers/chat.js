@@ -89,7 +89,7 @@ const searchNewNOldChats = (socket) => {
                 //the $and operator query multiple expressions together
                 $and: [
                     { _id: { $ne: userId } }, //$ne - not equal
-                    { username: { $regex: searchValue, $options: "i" } },
+                    { username: { $regex: value, $options: "i" } },
                 ],
             })
                 .select(["username", "avatarUrl"])
@@ -262,4 +262,5 @@ module.exports = {
     oldnNewChats,
     findChat,
     createChat,
+    searchNewNOldChats,
 };

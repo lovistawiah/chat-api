@@ -1,6 +1,11 @@
 const { Server } = require("socket.io");
 const { authenticateSocket } = require("../Middleware/userAuth");
-const { getChats, oldnNewChats, searchChats } = require("../controllers/chat");
+const {
+    getChats,
+    oldnNewChats,
+    searchChats,
+    searchNewNOldChats,
+} = require("../controllers/chat");
 const {
     createMessage,
     getMessages,
@@ -36,6 +41,7 @@ io.on("connection", (socket) => {
     searchChats(socket);
     oldnNewChats(socket);
     searchChats(socket);
+    searchNewNOldChats(socket);
 });
 
 module.exports = io;
