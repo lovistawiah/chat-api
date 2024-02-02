@@ -15,6 +15,7 @@ const {
     userStatus,
     updateOnlineStatus,
     updateOfflineStatus,
+    joinRooms,
 } = require("../controllers/userAccount");
 
 // FIXME: fix userStatus function
@@ -35,6 +36,7 @@ io.on("connection", async (socket) => {
     userStatus(socket);
     updateOnlineStatus(socket);
     updateOfflineStatus(socket);
+    joinRooms(socket);
 });
 
 io.on("connection", (socket) => {

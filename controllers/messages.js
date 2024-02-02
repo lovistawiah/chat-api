@@ -6,6 +6,7 @@ const { socketError } = require("../ioInstance/socketError");
 const { Socket, Server } = require("socket.io");
 const { default: mongoose, Types } = require("mongoose");
 const Message = require("../models/Messages");
+const { joinRoom } = require("./userAccount");
 
 /**
  *
@@ -135,6 +136,8 @@ async function saveMessageAndSend({ socket, chatId, lgUsrId, msg, io }) {
             sender: lgUsrId,
             message: msg,
         });
+        //join room
+        joinRoom(chatId.toString(), socket);
 
         const messageEdited = {
             _id: msgCreated._id,
@@ -160,3 +163,6 @@ module.exports = {
     createMessage,
     deleteMessage,
 };
+// send and receive message
+// how do i send and receive a message instantly
+//  using a common channel that exist between two users

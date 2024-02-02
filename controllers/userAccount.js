@@ -4,6 +4,7 @@ const { userEvents, usrEvents } = require("../utils/index");
 const { getUserNameFromEmail } = require("../utils/user");
 const { Socket } = require("socket.io");
 const { createToken } = require("../utils/token");
+const Chat = require("../models/Chat");
 
 /**
  *
@@ -101,12 +102,20 @@ const login = async (req, res) => {
             res.status(401).json({ message });
             return;
         }
+
+        const token = createToken({
+            userId: user._id,
+            username: user.username,
+        });
+
         const userInfo = {
             userId: user._id,
             username: user.username,
+            bio: user.bio,
+            avatarUrl: user.avatarUrl,
         };
-        const token = createToken({ userInfo });
-        res.status(200).json({ message: "ok", token });
+
+        res.status(200).json({ message: "ok", token, userInfo });
         return;
     } catch (err) {
         message = "Internal Server Error";
@@ -252,6 +261,38 @@ const typing = (socket) => {
     });
 };
 
+/**
+ *
+ * @param {Socket} socket
+ */
+const joinRooms = async (socket) => {
+    try {
+        const userId = socket.decoded.userId;
+        const findChats = await Chat.find({ members: { $in: userId } });
+        if (findChats && findChats.length > 0) {
+            findChats.forEach((chat) => {
+                const chatRoom = chat._id.toString();
+                socket.join(chatRoom);
+            });
+        }
+    } catch (err) {
+        //TODO fix all catch errors today!
+    }
+};
+
+/**
+ *
+ * @param {string} chatRoom
+ * @param {Socket} socket
+ */
+const joinRoom = (chatRoom, socket) => {
+    try {
+        if (chatRoom) {
+            socket.join(chatRoom);
+        }
+    } catch (err) {}
+};
+
 module.exports = {
     signup,
     login,
@@ -260,4 +301,6 @@ module.exports = {
     updateUserInfo,
     updateOfflineStatus,
     updateOnlineStatus,
+    joinRooms,
+    joinRoom,
 };

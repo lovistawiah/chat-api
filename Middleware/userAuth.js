@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/Users");
 const { Socket } = require("socket.io");
+const { verifyToken } = require("../utils/token");
 /**
  *
  * @param {Socket} socket
@@ -19,7 +20,7 @@ const authenticateSocket = async (socket, next) => {
             err.data = "register account";
             next(err);
         }
-        const payload = jwt.verify(token, process.env.JWT_SECRET);
+        const payload = verifyToken(token);
         if (!payload) {
             const err = new Error("invalid token");
             next(err);
