@@ -163,16 +163,12 @@ async function findChat(members) {
         const fndChat = await Chat.findOne({
             members: { $all: members },
         });
-        if (fndChat) {
-            return {
-                chatId: fndChat._id,
-                members: fndChat.members,
-            };
-        }
-        return "chat not found";
+        return {
+            chatId: fndChat._id,
+            members: fndChat.members,
+        };
     } catch (err) {
-        const message = err.message;
-        return message;
+        //
     }
 }
 
@@ -184,14 +180,12 @@ async function findChat(members) {
 async function createChat(members) {
     try {
         const createdChat = await Chat.create({ members });
-        if (!createdChat) return "chat not created";
         return {
-            chat: createdChat._id,
+            chatId: createdChat._id,
             members: createdChat.members,
         };
     } catch (err) {
-        const message = err.message;
-        return message;
+        //
     }
 }
 

@@ -60,26 +60,24 @@ const createMessage = async (io, socket) => {
     try {
         const lgUsrId = socket.decoded.userId;
 
-        socket.on(msgEvents.sndMsg, async ({ msg, userId }) => {
-            if (!msg) return;
+        socket.on(msgEvents.sndMsg, async ({ message, userId }) => {
+            if (!message) return;
             let chatMems;
             let chatId;
             const mems = [lgUsrId, userId];
-
             const fndChat = await findChat(mems);
             if (fndChat.chatId) {
                 chatId = fndChat.chatId;
                 chatMems = fndChat.members;
             } else {
                 const createdChat = await createChat(mems);
-
                 if (createdChat.chatId) {
                     chatId = createdChat.chatId;
                     chatMems = createdChat.members;
                 }
             }
-
-            saveMessageAndSend({ socket, chatId, lgUsrId, msg, io });
+            if (!chatId && !chatMems) return;
+            saveMessageAndSend({ socket, chatId, lgUsrId, message, io });
         });
     } catch (err) {
         const msg = err.message;
@@ -129,12 +127,13 @@ const deleteMessage = async (socket, io) => {
  *@param {new Server} io
  */
 
-async function saveMessageAndSend({ socket, chatId, lgUsrId, msg, io }) {
+async function saveMessageAndSend({ socket, chatId, lgUsrId, message, io }) {
     try {
+        console.log("chat id", chatId);
         const msgCreated = await Messages.create({
             chatId: chatId,
             sender: lgUsrId,
-            message: msg,
+            message,
         });
         //join room
         joinRoom(chatId.toString(), socket);
