@@ -109,8 +109,8 @@ const searchNewNOldChats = (socket) => {
  */
 // get all old and new users except the logged in user.
 // if the the other user and the logged in user are in a chat add the chat id to the contact obj
-const oldnNewChats = (socket) => {
-    socket.on(chatEvents.oldnNewChats, async () => {
+const contacts = (socket) => {
+    socket.on(chatEvents.contacts, async () => {
         try {
             const { userId } = socket.decoded;
 
@@ -120,15 +120,19 @@ const oldnNewChats = (socket) => {
                 .select(["username", "avatarUrl"])
                 .sort("asc");
 
-            const chats = await Promise.all(
+            await Promise.all(
                 friends.map(async (friend) => {
                     const chat = await Chat.find({
                         members: { $all: [friend._id, userId] },
                     });
 
                     if (!chat.length) {
-                        socket.emit(chatEvents.oldnNewChats, friend);
-                        return friend;
+                        const newContact = {
+                            _id: friend._id,
+                            username: friend.username,
+                            avatarUrl: friend.avatarUrl,
+                        };
+                        socket.emit(chatEvents.contacts, newContact);
                     }
 
                     if (chat[0]?._id) {
@@ -138,11 +142,10 @@ const oldnNewChats = (socket) => {
                             avatarUrl: friend.avatarUrl,
                             chatId: chat[0]?._id,
                         };
-                        socket.emit(chatEvents.oldnNewChats, oldFriend);
+                        socket.emit(chatEvents.contacts, oldFriend);
                     }
                 })
             );
-            console.log(chats);
         } catch (err) {
             const message = err.message;
             socketError(socket, chatEvents.errMsg, message);
@@ -238,6 +241,7 @@ const searchChats = (socket) => {
                 const chatInfo = {
                     chatId: chat._id,
                     userId: otherUser._id,
+                    status: otherUser.lastSeen,
                     username: otherUser.username,
                     avatarUrl: otherUser.avatarUrl,
                     lastMessage: lstMsg.message,
@@ -259,7 +263,7 @@ const searchChats = (socket) => {
 module.exports = {
     getChats,
     searchChats,
-    oldnNewChats,
+    contacts,
     findChat,
     createChat,
     searchNewNOldChats,

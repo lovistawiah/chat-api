@@ -7,7 +7,7 @@ const usrEvents = {
 const chatEvents = {
     chatLastMsg: "chatLastMsg",
     search: "search",
-    oldnNewChats: "oldnNewChats",
+    contacts: "contacts",
     searchChats: "searchChats",
     errMsg: "errMsg",
 };

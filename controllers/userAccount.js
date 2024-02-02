@@ -1,8 +1,7 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/Users");
-const { userEvents } = require("../utils/index");
+const { userEvents, usrEvents } = require("../utils/index");
 const { getUserNameFromEmail } = require("../utils/user");
-const { saveAndGetUserProfileUrl } = require("../utils/modifyProfilePic");
 const { Socket } = require("socket.io");
 const { createToken } = require("../utils/token");
 
@@ -160,6 +159,76 @@ const updateUserInfo = async (req, res) => {
         res.status(statusCode).json({ message });
     }
 };
+
+/**
+ *
+ * @param {Socket} socket
+ */
+const updateOnlineStatus = async (socket) => {
+    try {
+        const userId = socket.decoded.userId;
+        const status = "Online";
+        if (socket.connected) {
+            const findUser = await User.findByIdAndUpdate(
+                userId,
+                {
+                    lastSeen: status,
+                },
+                { new: true }
+            );
+
+            socket.emit(usrEvents.status, {
+                userId: findUser._id,
+                status: findUser.lastSeen,
+            });
+        }
+    } catch (err) {}
+};
+/**
+ *
+ * @param {Socket} socket
+ */
+const updateOfflineStatus = async (socket) => {
+    try {
+        const userId = socket.decoded.userId;
+        const status = new Date();
+        socket.on("disconnecting", async () => {
+            const findUser = await User.findByIdAndUpdate(
+                userId,
+                {
+                    lastSeen: status,
+                },
+                { new: true }
+            );
+            socket.emit(usrEvents.status, {
+                userId: findUser._id,
+                status: findUser.lastSeen,
+            });
+        });
+    } catch (err) {}
+};
+/**
+ *
+ * @param {Socket} socket
+ */
+
+const userStatus = (socket) => {
+    try {
+        socket.on(usrEvents.status, async (data) => {
+            const usrId = data;
+            if (!usrId) return;
+            const findUser = await User.findOne({ _id: usrId });
+            socket.emit(usrEvents.status, {
+                userId: findUser._id,
+                status: findUser.lastSeen,
+            });
+        });
+    } catch (err) {
+        const msg = err.message;
+        //socketError
+    }
+};
+
 /**
  *
  * @param {Socket} socket
@@ -187,7 +256,8 @@ module.exports = {
     signup,
     login,
     typing,
-    // userStatus,
-    // updateUserAvatar,
+    userStatus,
     updateUserInfo,
+    updateOfflineStatus,
+    updateOnlineStatus,
 };

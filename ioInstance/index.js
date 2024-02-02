@@ -2,15 +2,20 @@ const { Server } = require("socket.io");
 const { authenticateSocket } = require("../Middleware/userAuth");
 const {
     getChats,
-    oldnNewChats,
     searchChats,
     searchNewNOldChats,
+    contacts,
 } = require("../controllers/chat");
 const {
     createMessage,
     getMessages,
     deleteMessage,
 } = require("../controllers/messages");
+const {
+    userStatus,
+    updateOnlineStatus,
+    updateOfflineStatus,
+} = require("../controllers/userAccount");
 
 // FIXME: fix userStatus function
 const {
@@ -27,6 +32,9 @@ io.use(authenticateSocket);
 
 io.on("connection", async (socket) => {
     socket.userId = socket.decoded.userId;
+    userStatus(socket);
+    updateOnlineStatus(socket);
+    updateOfflineStatus(socket);
 });
 
 io.on("connection", (socket) => {
@@ -39,7 +47,7 @@ io.on("connection", (socket) => {
     //from controller/chat.js
     getChats(socket);
     searchChats(socket);
-    oldnNewChats(socket);
+    contacts(socket);
     searchChats(socket);
     searchNewNOldChats(socket);
 });
