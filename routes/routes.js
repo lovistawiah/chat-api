@@ -1,18 +1,14 @@
 const router = require("express").Router();
-const multer = require("multer");
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
 const {
     signup,
     login,
-    // updateUserAvatar,
     updateUserInfo,
+    userSettings,
 } = require("../controllers/userAccount");
+
 router.route("/signup").post(signup);
 router.route("/login").post(login);
-// TODO: features to fix later
-// router.route("/update-profile").post(upload.single("image"), updateUserAvatar);
+router.route("/user-settings").patch(userSettings);
 router.route("/update-user").patch(updateUserInfo);
 
 module.exports = router;

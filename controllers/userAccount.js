@@ -170,6 +170,75 @@ const updateUserInfo = async (req, res) => {
 };
 
 /**
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {Promise<void>}
+ */
+const userSettings = async (req, res) => {
+    console.log(req.body);
+    let message = "";
+    const { userId, newPassword, confirmPassword, currentPassword, username } =
+        req.body;
+    if (!userId) {
+        message = "user details not provided";
+        res.status(401).json({ message });
+        return;
+    }
+    if (!currentPassword) {
+        message = "current password not provided";
+        res.status(401).json({ message });
+        return;
+    }
+    const findUsr = await User.findById(userId);
+    if (!findUsr) {
+        message = "user not found";
+        res.status(401).json({ message });
+        return;
+    }
+    const comparePassword = await bcrypt.compare(
+        currentPassword,
+        findUsr.password
+    );
+    if (!comparePassword) {
+        message = "incorrect password";
+        res.status(401).json({ message });
+        return;
+    }
+
+    const isUsrExist = await User.findOne({ username });
+    if (isUsrExist) {
+        message = "username is already taken";
+        res.status(401).json({ message });
+        return;
+    }
+
+    const { bio } = req.body;
+    findUsr.username = username ? username : findUsr.username;
+    findUsr.bio = bio ? bio : findUsr.bio;
+    await findUsr.save({ new: true });
+
+    if (!newPassword || (!confirmPassword && newPassword !== confirmPassword)) {
+        message = "passwords do not match";
+        res.status(401).json({ message });
+        return;
+    } else if (
+        confirmPassword.length > 0 &&
+        newPassword.length > 0 &&
+        newPassword === confirmPassword
+    ) {
+        const hashedPass = await bcrypt.hash(newPassword, 10);
+        findUsr.password = hashedPass;
+    } else {
+        message = "passwords do not match";
+        res.status(401).json({ message });
+        return;
+    }
+    message = "user updated successfully";
+    res.status(200).json({ message });
+    return;
+};
+
+/**
  *
  * @param {Socket} socket
  */
@@ -275,4 +344,5 @@ module.exports = {
     updateOnlineStatus,
     joinRooms,
     joinRoom,
+    userSettings,
 };
