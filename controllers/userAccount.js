@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/Users");
-const { userEvents, usrEvents } = require("../utils/index");
+const { usrEvents } = require("../utils/index");
 const { getUserNameFromEmail } = require("../utils/user");
 const { Socket } = require("socket.io");
 const { createToken } = require("../utils/token");
@@ -301,6 +301,7 @@ const updateOfflineStatus = async (socket) => {
 const typing = (socket) => {
     socket.on(usrEvents.typing, async (data) => {
         const { chatId } = data;
+        if (!chatId) return;
         socket
             .to(chatId.toString())
             .emit(usrEvents.typing, { chatId, typing: "typing..." });

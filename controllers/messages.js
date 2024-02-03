@@ -63,12 +63,12 @@ const createMessage = async (io, socket) => {
             let chatId;
             const mems = [lgUsrId, userId];
             const fndChat = await findChat(mems);
-            if (fndChat.chatId) {
+            if (fndChat?.chatId) {
                 chatId = fndChat.chatId;
                 chatMems = fndChat.members;
             } else {
                 const createdChat = await createChat(mems);
-                if (createdChat.chatId) {
+                if (createdChat?.chatId) {
                     chatId = createdChat.chatId;
                     chatMems = createdChat.members;
                 }

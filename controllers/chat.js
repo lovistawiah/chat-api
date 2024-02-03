@@ -225,14 +225,14 @@ const searchChats = (socket) => {
                 const otherUser = chat.members.filter(
                     (user) =>
                         user._id !== userId &&
-                        user.username.includes(searchValue.trim())
+                        user.username.includes(value.trim())
                 )[0];
 
                 if (!otherUser) return;
 
                 const lstMsg = chat.messages.pop();
                 const chatInfo = {
-                    chatId: chat._id,
+                    Id: chat._id,
                     userId: otherUser._id,
                     status: otherUser.lastSeen,
                     username: otherUser.username,
@@ -245,7 +245,7 @@ const searchChats = (socket) => {
             if (searchResults.length < 1) {
                 searchResults = "no chats found";
             }
-            socket.emit(chatEvents.chatLastMsg, searchResults);
+            socket.emit(chatEvents.chatLastMsg, ...searchResults);
         });
     } catch (err) {
         const msg = err.message;
