@@ -10,6 +10,7 @@ const {
     createMessage,
     getMessages,
     deleteMessage,
+    updateMessage,
 } = require("../controllers/messages");
 const {
     userStatus,
@@ -44,6 +45,7 @@ io.on("connection", (socket) => {
     createMessage(io, socket);
     getMessages(socket);
     deleteMessage(socket, io);
+    updateMessage(socket, io);
 });
 io.on("connection", (socket) => {
     //from controller/chat.js

@@ -14,7 +14,7 @@ const chatEvents = {
 const msgEvents = {
     sndMsg: "sndMsg",
     delMsg: "delMsg",
-    liveStatus: "",
+    updateMsg: "updateMsg",
     msgs: "msgs",
     errMsg: "errMsg",
 };

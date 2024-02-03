@@ -4,7 +4,7 @@ const { createChat, findChat } = require("./chat");
 const { msgEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
 const { Socket, Server } = require("socket.io");
-const { default: mongoose, Types } = require("mongoose");
+const { default: mongoose } = require("mongoose");
 const Message = require("../models/Messages");
 const { joinRoom } = require("./userAccount");
 
@@ -25,10 +25,6 @@ const getMessages = (socket) => {
             chatMsgs.messages.forEach((msgInfo) => {
                 let { info, message, sender, createdAt, _id, updatedAt } =
                     msgInfo;
-
-                if (info == "deleted") {
-                    message = "this message was deleted";
-                }
 
                 if (createdAt === updatedAt) {
                     msgDate = createdAt;
@@ -92,30 +88,55 @@ const createMessage = async (io, socket) => {
  * @param {Socket} socket
  */
 const deleteMessage = async (socket, io) => {
-    const userId = socket.decoded.userId;
-    let msg;
-    socket.on(msgEvents.deleteMessage, async (data) => {
+    socket.on(msgEvents.delMsg, async (data) => {
         const { msgId, chatId } = data;
-        const msgUpdated = await Message.findOne({
-            _id: msgId,
-            chatId,
-        });
+        const msgUpdated = await Message.findByIdAndUpdate(
+            msgId,
+            { message: "this message was deleted", info: "deleted" },
+            { new: true }
+        );
 
         if (!msgUpdated) {
             msg = "No message found! Operation failed";
             return;
         }
-        msgUpdated.info = "deleted";
-        await msgUpdated.save();
 
-        msg = {
+        const msg = {
             Id: msgId,
-            message: "this message was deleted",
-            sender: userId,
-            createdAt: msgUpdated.updatedAt,
+            info: msgUpdated.info,
+            message: msgUpdated.message,
+            sender: msgUpdated.sender,
+            msgDate: msgUpdated.updatedAt,
+            chatId,
         };
 
         io.to(chatId.toString()).emit(msgEvents.delMsg, msg);
+    });
+};
+
+/**
+ * @param {Socket} socket
+ */
+const updateMessage = (socket, io) => {
+    socket.on(msgEvents.updateMsg, async (data) => {
+        const { msgId, message } = data;
+        if (!msgId && !message) return;
+        const findMsg = await Message.findByIdAndUpdate(
+            msgId,
+            { message, info: "edited" },
+            { new: true }
+        );
+        if (!findMsg) return;
+        const chatId = findMsg.chatId;
+        const msg = {
+            Id: msgId,
+            info: findMsg.info,
+            message: findMsg.message,
+            sender: findMsg.sender,
+            msgDate: findMsg.updatedAt,
+            chatId,
+        };
+        io.to(chatId.toString()).emit(msgEvents.updateMsg, msg);
     });
 };
 
@@ -160,6 +181,7 @@ module.exports = {
     getMessages,
     createMessage,
     deleteMessage,
+    updateMessage,
 };
 // send and receive message
 // how do i send and receive a message instantly
