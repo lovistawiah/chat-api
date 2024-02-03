@@ -37,11 +37,12 @@ const getMessages = (socket) => {
                 }
 
                 const msg = {
-                    msgId: _id,
+                    Id: _id,
                     info,
                     message,
                     sender,
                     msgDate,
+                    chatId: chatMsgs._id,
                 };
                 socket.emit(msgEvents.msgs, msg);
             });
@@ -108,7 +109,7 @@ const deleteMessage = async (socket, io) => {
         await msgUpdated.save();
 
         msg = {
-            _id: msgId,
+            Id: msgId,
             message: "this message was deleted",
             sender: userId,
             createdAt: msgUpdated.updatedAt,
@@ -129,7 +130,6 @@ const deleteMessage = async (socket, io) => {
 
 async function saveMessageAndSend({ socket, chatId, lgUsrId, message, io }) {
     try {
-        console.log("chat id", chatId);
         const msgCreated = await Messages.create({
             chatId: chatId,
             sender: lgUsrId,
@@ -137,16 +137,15 @@ async function saveMessageAndSend({ socket, chatId, lgUsrId, message, io }) {
         });
         //join room
         joinRoom(chatId.toString(), socket);
-
-        const messageEdited = {
-            _id: msgCreated._id,
+        const msgEdited = {
+            Id: msgCreated._id,
             message: msgCreated.message,
             sender: msgCreated.sender,
-            createdAt: msgCreated.createdAt,
+            msgDate: msgCreated.createdAt,
             chatId: msgCreated.chatId,
+            info: msgCreated.info,
         };
-
-        io.to(chatId.toString()).emit(msgEvents.sndMsg, messageEdited);
+        io.to(chatId.toString()).emit(msgEvents.sndMsg, msgEdited);
 
         await Chat.findByIdAndUpdate(chatId, {
             $push: { messages: msgCreated._id },
