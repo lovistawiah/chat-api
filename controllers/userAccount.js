@@ -175,7 +175,6 @@ const updateUserInfo = async (req, res) => {
  * @returns {Promise<void>}
  */
 const userSettings = async (req, res) => {
-    console.log(req.body);
     let message = "";
     const { userId, newPassword, confirmPassword, currentPassword, username } =
         req.body;
@@ -234,7 +233,12 @@ const userSettings = async (req, res) => {
         return;
     }
     message = "user updated successfully";
-    res.status(200).json({ message });
+    const userInfo = {
+        Id: findUsr._id,
+        username: findUsr.username,
+        bio: findUsr.bio,
+    };
+    res.status(200).json({ message, userInfo });
     return;
 };
 
