@@ -186,7 +186,7 @@ const updateOnlineStatus = async (socket) => {
                 { new: true }
             );
 
-            socket.emit(usrEvents.status, {
+            socket.broadcast.emit(usrEvents.status, {
                 userId: findUser._id,
                 status: findUser.lastSeen,
             });
@@ -209,7 +209,7 @@ const updateOfflineStatus = async (socket) => {
                 },
                 { new: true }
             );
-            socket.emit(usrEvents.status, {
+            socket.broadcast.emit(usrEvents.status, {
                 userId: findUser._id,
                 status: findUser.lastSeen,
             });
@@ -221,43 +221,16 @@ const updateOfflineStatus = async (socket) => {
  * @param {Socket} socket
  */
 
-const userStatus = (socket) => {
-    try {
-        socket.on(usrEvents.status, async (data) => {
-            const usrId = data;
-            if (!usrId) return;
-            const findUser = await User.findOne({ _id: usrId });
-            socket.emit(usrEvents.status, {
-                userId: findUser._id,
-                status: findUser.lastSeen,
-            });
-        });
-    } catch (err) {
-        const msg = err.message;
-        //socketError
-    }
-};
-
 /**
  *
  * @param {Socket} socket
  */
 const typing = (socket) => {
-    socket.on(userEvents.typing, async (data) => {
-        let receiver;
-        const { chatId, userId } = data;
-        // const chatMembers = await findChat(chatId);
-        if (!chatMembers) return;
-
-        chatMembers.forEach((member) => {
-            if (member._id.toString() != socket.userId) {
-                receiver = member._id.toString();
-            }
-        });
-        const message = "typing...";
+    socket.on(usrEvents.typing, async (data) => {
+        const { chatId } = data;
         socket
-            .to(receiver)
-            .volatile.emit(userEvents.typing, { message, chatId, userId });
+            .to(chatId.toString())
+            .emit(usrEvents.typing, { chatId, typing: "typing..." });
     });
 };
 
@@ -297,7 +270,6 @@ module.exports = {
     signup,
     login,
     typing,
-    userStatus,
     updateUserInfo,
     updateOfflineStatus,
     updateOnlineStatus,

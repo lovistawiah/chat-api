@@ -13,10 +13,10 @@ const {
     updateMessage,
 } = require("../controllers/messages");
 const {
-    userStatus,
     updateOnlineStatus,
     updateOfflineStatus,
     joinRooms,
+    typing,
 } = require("../controllers/userAccount");
 
 // FIXME: fix userStatus function
@@ -34,10 +34,10 @@ io.use(authenticateSocket);
 
 io.on("connection", async (socket) => {
     socket.userId = socket.decoded.userId;
-    userStatus(socket);
     updateOnlineStatus(socket);
     updateOfflineStatus(socket);
     joinRooms(socket);
+    typing(socket);
 });
 
 io.on("connection", (socket) => {
