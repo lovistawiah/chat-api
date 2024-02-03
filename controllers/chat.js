@@ -130,6 +130,7 @@ const contacts = (socket) => {
                             _id: friend._id,
                             username: friend.username,
                             avatarUrl: friend.avatarUrl,
+                            bio: friend.bio,
                         };
                         socket.emit(chatEvents.contacts, newContact);
                     }
@@ -140,6 +141,7 @@ const contacts = (socket) => {
                             username: friend.username,
                             avatarUrl: friend.avatarUrl,
                             chatId: chat[0]?._id,
+                            bio: friend.bio,
                         };
                         socket.emit(chatEvents.contacts, oldFriend);
                     }

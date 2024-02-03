@@ -282,10 +282,12 @@ const updateOfflineStatus = async (socket) => {
                 },
                 { new: true }
             );
-            socket.broadcast.emit(usrEvents.status, {
-                userId: findUser._id,
-                status: findUser.lastSeen,
-            });
+            if (findUser) {
+                socket.broadcast.emit(usrEvents.status, {
+                    userId: findUser._id,
+                    status: findUser.lastSeen,
+                });
+            }
         });
     } catch (err) {}
 };
