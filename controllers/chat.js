@@ -48,14 +48,13 @@ const getChats = (socket) => {
                 members.forEach((member) => {
                     if (member._id.toString() != userId) {
                         const chatInfo = {
-                            chat: chat._id,
+                            Id: chat._id,
                             userId: member._id,
                             username: member.username,
                             avatarUrl: member.avatarUrl,
                             lastMessage: lstMsgInfo.message,
                             lstMsgDate: lstMsgInfo.createdAt,
                         };
-                        cons;
                         socket.emit(chatEvents.chatLastMsg, chatInfo);
                     }
                 });
