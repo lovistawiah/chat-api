@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/Users");
-const { usrEvents, chatEvents } = require("../utils/index");
+const { usrEvents, chatEvents, msgEvents } = require("../utils/index");
 const { getUserNameFromEmail, sanitize } = require("../utils/user");
 const { Socket } = require("socket.io");
 const { createToken } = require("../utils/token");
@@ -40,7 +40,7 @@ const signup = async (req, res) => {
 
         const bio = `hey there, I'm on You and I`;
         const account = {
-            email: email.to,
+            email: email,
             password,
             username: uniqueUserName,
             avatarUrl: defaultUrl,
@@ -64,14 +64,10 @@ const signup = async (req, res) => {
         res.status(200).json({ message, userInfo });
         return;
     } catch (err) {
-        let StatusCode = 500;
-        message = "Internal Server Error";
-        if (err.code == 11000) {
-            const errValue = Object.keys(err.keyValue);
-            message = `${errValue} already exists`;
-            StatusCode = 400;
+        if (err instanceof MongooseError) {
+            const message = err.message;
+            res.status(StatusCode).json({ message });
         }
-        res.status(StatusCode).json({ message });
     }
 };
 
@@ -122,8 +118,10 @@ const login = async (req, res) => {
         res.status(200).json({ message: "ok", token, userInfo: userObj });
         return;
     } catch (err) {
-        message = "Internal Server Error";
-        res.status(500).json({ message });
+        if (err instanceof MongooseError) {
+            const message = err.message;
+            res.status(500).json({ message });
+        }
     }
 };
 
@@ -163,14 +161,11 @@ const updateUserInfo = async (req, res) => {
             message = "username updated successfully";
             res.status(200).json({ message, userInfo, token });
         }
-    } catch (error) {
-        let statusCode = 500;
-        message = error.message;
-        if (error.code === 11000) {
-            message = `${username} already exists`;
-            statusCode = 401;
+    } catch (err) {
+        if (err instanceof MongooseError) {
+            const message = err.message;
+            res.status(statusCode).json({ message });
         }
-        res.status(statusCode).json({ message });
     }
 };
 
@@ -181,70 +176,85 @@ const updateUserInfo = async (req, res) => {
  */
 const userSettings = async (req, res) => {
     let message = "";
-    const { userId, newPassword, confirmPassword, currentPassword, username } =
-        req.body;
-    if (!userId) {
-        message = "user details not provided";
-        res.status(401).json({ message });
-        return;
-    }
-    if (!currentPassword) {
-        message = "current password not provided";
-        res.status(401).json({ message });
-        return;
-    }
-    const findUsr = await User.findById(userId);
-    if (!findUsr) {
-        message = "user not found";
-        res.status(401).json({ message });
-        return;
-    }
-    const comparePassword = await bcrypt.compare(
-        currentPassword,
-        findUsr.password
-    );
-    if (!comparePassword) {
-        message = "incorrect password";
-        res.status(401).json({ message });
-        return;
-    }
-    username = sanitize(username);
-    const isUsrExist = await User.findOne({ username });
-    if (isUsrExist) {
-        message = "username is already taken";
-        res.status(401).json({ message });
-        return;
-    }
+    try {
+        const {
+            userId,
+            newPassword,
+            confirmPassword,
+            currentPassword,
+            username,
+        } = req.body;
+        if (!userId) {
+            message = "user details not provided";
+            res.status(401).json({ message });
+            return;
+        }
+        if (!currentPassword) {
+            message = "current password not provided";
+            res.status(401).json({ message });
+            return;
+        }
+        const findUsr = await User.findById(userId);
+        if (!findUsr) {
+            message = "user not found";
+            res.status(401).json({ message });
+            return;
+        }
+        const comparePassword = await bcrypt.compare(
+            currentPassword,
+            findUsr.password
+        );
+        if (!comparePassword) {
+            message = "incorrect password";
+            res.status(401).json({ message });
+            return;
+        }
+        username = sanitize(username);
+        const isUsrExist = await User.findOne({ username });
+        if (isUsrExist) {
+            message = "username is already taken";
+            res.status(401).json({ message });
+            return;
+        }
 
-    const { bio } = req.body;
-    findUsr.username = username ? username : findUsr.username;
-    findUsr.bio = bio ? bio : findUsr.bio;
-    await findUsr.save({ new: true });
+        const { bio } = req.body;
+        findUsr.username = username ? username : findUsr.username;
+        findUsr.bio = bio ? bio : findUsr.bio;
+        await findUsr.save({ new: true });
 
-    if (!newPassword || (!confirmPassword && newPassword !== confirmPassword)) {
-        message = "passwords do not match";
-        res.status(401).json({ message });
+        if (
+            !newPassword ||
+            (!confirmPassword && newPassword !== confirmPassword)
+        ) {
+            message = "passwords do not match";
+            res.status(401).json({ message });
+            return;
+        } else if (
+            confirmPassword.length > 0 &&
+            newPassword.length > 0 &&
+            newPassword === confirmPassword
+        ) {
+            const hashedPass = await bcrypt.hash(newPassword, 10);
+            findUsr.password = hashedPass;
+        } else {
+            message = "passwords do not match";
+            res.status(401).json({ message });
+            return;
+        }
+        message = "user updated successfully";
+        const userInfo = {
+            Id: findUsr._id,
+            username: findUsr.username,
+            bio: findUsr.bio,
+        };
+        res.status(200).json({ message, userInfo });
         return;
-    } else if (
-        confirmPassword.length > 0 &&
-        newPassword.length > 0 &&
-        newPassword === confirmPassword
-    ) {
-        const hashedPass = await bcrypt.hash(newPassword, 10);
-        findUsr.password = hashedPass;
-    } else {
-        message = "passwords do not match";
-        res.status(401).json({ message });
-        return;
+    } catch (err) {
+        if (err instanceof MongooseError) {
+            message = err.message;
+            res.status(500).json({ message });
+        }
     }
-    message = "user updated successfully";
-    const userInfo = {
-        Id: findUsr._id,
-        username: findUsr.username,
-        bio: findUsr.bio,
-    };
-    res.status(200).json({ message, userInfo });
-    return;
 };
 
 /**
@@ -269,7 +279,12 @@ const updateOnlineStatus = async (socket) => {
                 status: findUser.lastSeen,
             });
         }
-    } catch (err) {}
+    } catch (err) {
+        if (err instanceof MongooseError) {
+            const message = err.message;
+            socketError(socket, msgEvents.errMsg, message);
+        }
+    }
 };
 /**
  *
@@ -294,7 +309,12 @@ const updateOfflineStatus = async (socket) => {
                 });
             }
         });
-    } catch (err) {}
+    } catch (err) {
+        if (err instanceof MongooseError) {
+            const message = err.message;
+            socketError(socket, msgEvents.errMsg, message);
+        }
+    }
 };
 
 /**
