@@ -116,7 +116,7 @@ const contacts = (socket) => {
             const friends = await User.find({
                 _id: { $ne: userId },
             })
-                .select(["username", "avatarUrl"])
+                .select(["username", "avatarUrl", "bio"])
                 .sort("asc");
 
             await Promise.all(
@@ -124,7 +124,6 @@ const contacts = (socket) => {
                     const chat = await Chat.find({
                         members: { $all: [friend._id, userId] },
                     });
-
                     if (!chat.length) {
                         const newContact = {
                             _id: friend._id,

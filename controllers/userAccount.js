@@ -291,10 +291,6 @@ const updateOfflineStatus = async (socket) => {
         });
     } catch (err) {}
 };
-/**
- *
- * @param {Socket} socket
- */
 
 /**
  *
