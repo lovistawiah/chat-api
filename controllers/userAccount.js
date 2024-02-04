@@ -1,10 +1,12 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/Users");
-const { usrEvents } = require("../utils/index");
-const { getUserNameFromEmail } = require("../utils/user");
+const { usrEvents, chatEvents } = require("../utils/index");
+const { getUserNameFromEmail, sanitize } = require("../utils/user");
 const { Socket } = require("socket.io");
 const { createToken } = require("../utils/token");
 const Chat = require("../models/Chat");
+const { MongooseError } = require("mongoose");
+const { socketError } = require("../ioInstance/socketError");
 
 /**
  *
@@ -21,6 +23,7 @@ const signup = async (req, res) => {
             res.status(400).json({ message });
             return;
         }
+        email = sanitize(email);
         if (password !== confirmPassword) {
             message = "passwords do not match";
             res.status(401).json({ message });
@@ -37,7 +40,7 @@ const signup = async (req, res) => {
 
         const bio = `hey there, I'm on You and I`;
         const account = {
-            email,
+            email: email.to,
             password,
             username: uniqueUserName,
             avatarUrl: defaultUrl,
@@ -87,6 +90,7 @@ const login = async (req, res) => {
             res.status(401).json({ message });
             return;
         }
+        usernameEmail = sanitize(usernameEmail);
         const user = await User.findOne({
             $or: [{ username: usernameEmail }, { email: usernameEmail }],
         });
@@ -130,6 +134,7 @@ const login = async (req, res) => {
  */
 const updateUserInfo = async (req, res) => {
     const { userId, username } = req.body;
+    username = sanitize(username);
     try {
         let message = "";
         if (!userId) {
@@ -203,7 +208,7 @@ const userSettings = async (req, res) => {
         res.status(401).json({ message });
         return;
     }
-
+    username = sanitize(username);
     const isUsrExist = await User.findOne({ username });
     if (isUsrExist) {
         message = "username is already taken";
@@ -317,11 +322,14 @@ const joinRooms = async (socket) => {
         if (findChats && findChats.length > 0) {
             findChats.forEach((chat) => {
                 const chatRoom = chat._id.toString();
-                socket.join(chatRoom);
+                joinRoom(chatRoom);
             });
         }
     } catch (err) {
-        //TODO fix all catch errors today!
+        if (err instanceof MongooseError) {
+            const errMsg = err.message;
+            socketError(socket, chatEvents.errMsg, errMsg);
+        }
     }
 };
 

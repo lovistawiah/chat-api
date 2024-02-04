@@ -25,5 +25,11 @@ async function getUserNameFromEmail(email) {
         username += splitUniqueId;
     }
 }
-
-module.exports = { getUserNameFromEmail };
+/**
+ *
+ * @param {string} string
+ */
+function sanitize(string) {
+    return string.toLowerCase().trim();
+}
+module.exports = { getUserNameFromEmail, sanitize };

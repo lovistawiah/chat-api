@@ -45,7 +45,6 @@ const getChats = (socket) => {
             userChats.forEach((chat) => {
                 const { members, messages } = chat;
                 const lstMsgInfo = messages.pop();
-
                 members.forEach((member) => {
                     if (member._id.toString() != userId) {
                         const chatInfo = {
@@ -111,8 +110,6 @@ const searchNewNOldChats = (socket) => {
  *
  * @param {Socket} socket
  */
-// get all old and new users except the logged in user.
-// if the the other user and the logged in user are in a chat add the chat id to the contact obj
 const contacts = (socket) => {
     socket.on(chatEvents.contacts, async () => {
         try {

@@ -1,7 +1,7 @@
 const Chat = require("../models/Chat");
 const Messages = require("../models/Messages");
 const { createChat, findChat } = require("./chat");
-const { msgEvents } = require("../utils/index");
+const { msgEvents, chatEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
 const { Socket, Server } = require("socket.io");
 const { default: mongoose } = require("mongoose");
@@ -64,7 +64,8 @@ const createNewChatAndMessage = (io, socket) => {
 
             const createdChat = await createChat(mems);
             if (!createdChat?.chatId) {
-                // emit error
+                const errMsg = "chat not created";
+                socketError(socket, chatEvents.errMsg, errMsg);
                 return;
             }
             const chatId = createdChat.chatId;
@@ -224,6 +225,3 @@ module.exports = {
     updateMessage,
     createNewChatAndMessage,
 };
-// send and receive message
-// how do i send and receive a message instantly
-//  using a common channel that exist between two users

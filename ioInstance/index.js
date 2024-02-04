@@ -20,11 +20,6 @@ const {
     typing,
 } = require("../controllers/userAccount");
 
-// FIXME: fix userStatus function
-const {
-    // userStatus,
-} = require("../controllers/userAccount");
-
 const io = new Server({
     cors: {
         origin: ["http://localhost:5173", "http://172.20.10.2:5173"],
