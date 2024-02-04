@@ -70,7 +70,6 @@ const createNewChatAndMessage = (io, socket) => {
             const chatId = createdChat.chatId;
             joinRoom(chatId.toString(), socket);
             saveMessageAndSend({ socket, chatId, lgUsrId, message, io });
-            console.log("new chat and message");
         });
     } catch (err) {
         const msg = err.message;
