@@ -29,7 +29,7 @@ const signup = async (req, res) => {
             res.status(401).json({ message });
             return;
         }
-        const uniqueUserName = await getUserNameFromEmail(email);
+        let uniqueUserName = await getUserNameFromEmail(email);
         if (!uniqueUserName) {
             message = "unknown error, try again!";
             res.status(400).json({ message });
@@ -80,7 +80,7 @@ const signup = async (req, res) => {
 const login = async (req, res) => {
     let message = "";
     try {
-        const { usernameEmail, password } = req.body;
+        let { usernameEmail, password } = req.body;
         if (!usernameEmail || !password) {
             message = "username, email or password required";
             res.status(401).json({ message });
@@ -131,7 +131,7 @@ const login = async (req, res) => {
  * @returns {Promise<void>}
  */
 const updateUserInfo = async (req, res) => {
-    const { userId, username } = req.body;
+    let { userId, username } = req.body;
     username = sanitize(username);
     try {
         let message = "";
@@ -177,12 +177,13 @@ const updateUserInfo = async (req, res) => {
 const userSettings = async (req, res) => {
     let message = "";
     try {
-        const {
+        let {
             userId,
             newPassword,
             confirmPassword,
             currentPassword,
             username,
+            bio,
         } = req.body;
         if (!userId) {
             message = "user details not provided";
@@ -217,7 +218,6 @@ const userSettings = async (req, res) => {
             return;
         }
 
-        const { bio } = req.body;
         findUsr.username = username ? username : findUsr.username;
         findUsr.bio = bio ? bio : findUsr.bio;
         await findUsr.save({ new: true });
