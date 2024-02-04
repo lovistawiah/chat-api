@@ -102,20 +102,20 @@ const login = async (req, res) => {
             res.status(401).json({ message });
             return;
         }
-
-        const token = createToken({
+        const userInfo = {
             userId: user._id,
             username: user.username,
-        });
+        };
+        const token = createToken({ userInfo });
 
-        const userInfo = {
+        const userObj = {
             userId: user._id,
             username: user.username,
             bio: user.bio,
             avatarUrl: user.avatarUrl,
         };
 
-        res.status(200).json({ message: "ok", token, userInfo });
+        res.status(200).json({ message: "ok", token, userInfo: userObj });
         return;
     } catch (err) {
         message = "Internal Server Error";
