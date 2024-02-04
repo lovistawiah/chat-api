@@ -335,7 +335,10 @@ const joinRoom = (chatRoom, socket) => {
         if (chatRoom) {
             socket.join(chatRoom);
         }
-    } catch (err) {}
+    } catch (err) {
+        const msg = err.message;
+        socketError(socket, msgEvents.errMsg, msg);
+    }
 };
 
 module.exports = {

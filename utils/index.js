@@ -17,6 +17,7 @@ const msgEvents = {
     updateMsg: "updateMsg",
     msgs: "msgs",
     errMsg: "errMsg",
+    newChat: "newChat",
 };
 
 module.exports = {

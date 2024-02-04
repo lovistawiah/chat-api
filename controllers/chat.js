@@ -3,6 +3,7 @@ const { socketError } = require("../ioInstance/socketError");
 const Chat = require("../models/Chat");
 const User = require("../models/Users");
 const { chatEvents } = require("../utils");
+const { MongooseError } = require("mongoose");
 /**
  *
  * @param {Socket} socket
@@ -60,8 +61,10 @@ const getChats = (socket) => {
                 });
             });
         } catch (err) {
-            message = err.message;
-            socketError(socket, chatEvents.errMsg, message);
+            if (err instanceof MongooseError) {
+                const msg = err.message;
+                socketError(socket, chatEvents.errMsg, msg);
+            }
         }
     });
 };
@@ -91,13 +94,15 @@ const searchNewNOldChats = (socket) => {
                     { username: { $regex: value, $options: "i" } },
                 ],
             })
-                .select(["username", "avatarUrl"])
+                .select(["username", "avatarUrl", "bio"])
                 .sort("asc");
             // emitting to the old and new chats
             socket.emit(chatEvents.oldnNewChats, oldAndNewFriends);
         } catch (err) {
-            const message = err.message;
-            socketError(socket, chatEvents.errMsg, message);
+            if (err instanceof MongooseError) {
+                const msg = err.message;
+                socketError(socket, chatEvents.errMsg, msg);
+            }
         }
     });
 };
@@ -116,59 +121,58 @@ const contacts = (socket) => {
             const friends = await User.find({
                 _id: { $ne: userId },
             })
-                .select(["username", "avatarUrl", "bio"])
+                .select(["username", "avatarUrl", "bio", "chats"])
                 .sort("asc");
 
-            await Promise.all(
-                friends.map(async (friend) => {
-                    const chat = await Chat.find({
-                        members: { $all: [friend._id, userId] },
-                    });
-                    if (!chat.length) {
-                        const newContact = {
-                            _id: friend._id,
-                            username: friend.username,
-                            avatarUrl: friend.avatarUrl,
-                            bio: friend.bio,
-                        };
-                        socket.emit(chatEvents.contacts, newContact);
-                    }
+            friends.forEach(async (friend) => {
+                const chat = await Chat.findOne({
+                    members: { $all: [friend._id, userId] },
+                });
 
-                    if (chat[0]?._id) {
-                        const oldFriend = {
-                            _id: friend._id,
-                            username: friend.username,
-                            avatarUrl: friend.avatarUrl,
-                            chatId: chat[0]?._id,
-                            bio: friend.bio,
-                        };
-                        socket.emit(chatEvents.contacts, oldFriend);
-                    }
-                })
-            );
+                if (chat) {
+                    const oldFriend = {
+                        _id: friend._id,
+                        username: friend.username,
+                        avatarUrl: friend.avatarUrl,
+                        chatId: chat._id,
+                        bio: friend.bio,
+                    };
+                    socket.emit(chatEvents.contacts, oldFriend);
+                } else {
+                    const newContact = {
+                        _id: friend._id,
+                        username: friend.username,
+                        avatarUrl: friend.avatarUrl,
+                        bio: friend.bio,
+                    };
+                    socket.emit(chatEvents.contacts, newContact);
+                }
+            });
         } catch (err) {
-            const message = err.message;
-            socketError(socket, chatEvents.errMsg, message);
+            if (err instanceof MongooseError) {
+                const msg = err.message;
+                socketError(socket, chatEvents.errMsg, msg);
+            }
         }
     });
 };
 
 /**
- *
- * @param {[import("mongoose").ObjectId]} members
+ * @param {import("mongoose").ObjectId} chatId
  *
  */
-async function findChat(members) {
+async function findChat(chatId) {
     try {
-        const fndChat = await Chat.findOne({
-            members: { $all: members },
-        });
+        const fndChat = await Chat.findById(chatId);
         return {
             chatId: fndChat._id,
             members: fndChat.members,
         };
     } catch (err) {
-        //
+        if (err instanceof MongooseError) {
+            const message = err.message;
+            return message;
+        }
     }
 }
 
@@ -185,7 +189,10 @@ async function createChat(members) {
             members: createdChat.members,
         };
     } catch (err) {
-        //
+        if (err instanceof MongooseError) {
+            const message = err.message;
+            return message;
+        }
     }
 }
 
@@ -249,8 +256,10 @@ const searchChats = (socket) => {
             socket.emit(chatEvents.chatLastMsg, ...searchResults);
         });
     } catch (err) {
-        const msg = err.message;
-        socketError(socket, chatEvents.errMsg, msg);
+        if (err instanceof MongooseError) {
+            const msg = err.message;
+            socketError(socket, chatEvents.errMsg, msg);
+        }
     }
 };
 

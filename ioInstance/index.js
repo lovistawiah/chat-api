@@ -11,6 +11,7 @@ const {
     getMessages,
     deleteMessage,
     updateMessage,
+    createNewChatAndMessage,
 } = require("../controllers/messages");
 const {
     updateOnlineStatus,
@@ -38,11 +39,16 @@ io.on("connection", async (socket) => {
     updateOfflineStatus(socket);
     joinRooms(socket);
     typing(socket);
+    socket.on("error", (err) => {
+        const msg = err.message;
+        socket.emit("error", msg);
+    });
 });
 
 io.on("connection", (socket) => {
     //from controller/messages.js
     createMessage(io, socket);
+    createNewChatAndMessage(io, socket);
     getMessages(socket);
     deleteMessage(socket, io);
     updateMessage(socket, io);
