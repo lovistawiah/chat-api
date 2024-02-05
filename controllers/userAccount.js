@@ -261,6 +261,19 @@ const userSettings = async (req, res) => {
  *
  * @param {Socket} socket
  */
+const userStatus = (socket) => {
+    socket.on(usrEvents.status, async (userId) => {
+        const findUser = await User.findById(userId);
+        if (!findUser) return;
+        const status = findUser.lastSeen;
+        socket.emit(usrEvents.status, { userId, status });
+    });
+};
+
+/**
+ *
+ * @param {Socket} socket
+ */
 const updateOnlineStatus = async (socket) => {
     try {
         const userId = socket.decoded.userId;
@@ -361,7 +374,8 @@ const joinRooms = async (socket) => {
 const joinRoom = (chatRoom, socket) => {
     try {
         if (chatRoom) {
-            socket.join(chatRoom);
+            const room = chatRoom.toString();
+            socket.join(room);
         }
     } catch (err) {
         const msg = err.message;
@@ -378,5 +392,6 @@ module.exports = {
     updateOnlineStatus,
     joinRooms,
     joinRoom,
+    userStatus,
     userSettings,
 };

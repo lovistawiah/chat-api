@@ -18,6 +18,7 @@ const {
     updateOfflineStatus,
     joinRooms,
     typing,
+    userStatus,
 } = require("../controllers/userAccount");
 
 const io = new Server({
@@ -32,6 +33,7 @@ io.on("connection", async (socket) => {
     socket.userId = socket.decoded.userId;
     updateOnlineStatus(socket);
     updateOfflineStatus(socket);
+    userStatus(socket);
     joinRooms(socket);
     typing(socket);
     socket.on("error", (err) => {

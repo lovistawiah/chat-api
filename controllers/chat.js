@@ -45,6 +45,7 @@ const getChats = (socket) => {
             userChats.forEach((chat) => {
                 const { members, messages } = chat;
                 const lstMsgInfo = messages.pop();
+
                 members.forEach((member) => {
                     if (member._id.toString() != userId) {
                         const chatInfo = {
