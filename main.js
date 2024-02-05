@@ -3,7 +3,6 @@ const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
 const http = require("http");
-const morgan = require("morgan");
 
 //local files
 const ioInstance = require("./ioInstance/index");
@@ -13,9 +12,6 @@ const connection = require("./db/connection");
 const app = express();
 const server = http.createServer(app); // Attach Express app to the HTTP server
 const MONGO_URI = process.env.MONGO_URI;
-
-// use only in dev mode
-app.use(morgan("dev"));
 
 app.use(cors({ origin: true }));
 app.use(express.urlencoded({ extended: true }));
@@ -33,7 +29,7 @@ async function start(url) {
             console.log(`listening on http://localhost:${PORT}`);
         });
     } catch (err) {
-        throw new Error(err.message);
+        console.error(err);
     }
 }
 
