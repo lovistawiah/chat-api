@@ -220,11 +220,9 @@ const joinMemsToRoom = async (io, userId, chatId) => {
 
 module.exports = {
     getChats,
-    searchChats,
     contacts,
     findChat,
     createChat,
-    searchNewNOldChats,
     joinMemsToRoom,
     getUsrInfo,
 };

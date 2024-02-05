@@ -1,11 +1,6 @@
 const { Server } = require("socket.io");
 const { authenticateSocket } = require("../Middleware/userAuth");
-const {
-    getChats,
-    searchChats,
-    searchNewNOldChats,
-    contacts,
-} = require("../controllers/chat");
+const { getChats, contacts } = require("../controllers/chat");
 const {
     createMessage,
     getMessages,
@@ -52,10 +47,7 @@ io.on("connection", (socket) => {
 io.on("connection", async (socket) => {
     //from controller/chat.js
     getChats(socket);
-    searchChats(socket);
     contacts(socket);
-    searchChats(socket);
-    searchNewNOldChats(socket);
 });
 
 module.exports = io;
