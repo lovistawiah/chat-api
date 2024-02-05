@@ -73,46 +73,6 @@ const getChats = (socket) => {
  *
  * @param {Socket} socket
  */
-const searchNewNOldChats = (socket) => {
-    socket.on(chatEvents.search, async (value) => {
-        console.log(value);
-        try {
-            const userId = socket.userId;
-            if (
-                value.includes("+") ||
-                value.includes("-") ||
-                value.includes("|") ||
-                value.includes("\\") ||
-                value.includes("=")
-            ) {
-                return;
-            }
-
-            const oldAndNewFriends = await User.find({
-                //the $and operator query multiple expressions together
-                $and: [
-                    { _id: { $ne: userId } }, //$ne - not equal
-                    { username: { $regex: value, $options: "i" } },
-                ],
-            })
-                .select(["username", "avatarUrl", "bio"])
-                .sort("asc");
-            // emitting to the old and new chats
-            console.log(oldAndNewFriends);
-            socket.emit(chatEvents.oldnNewChats, oldAndNewFriends);
-        } catch (err) {
-            if (err instanceof MongooseError) {
-                const msg = err.message;
-                socketError(socket, chatEvents.errMsg, msg);
-            }
-        }
-    });
-};
-
-/**
- *
- * @param {Socket} socket
- */
 const contacts = (socket) => {
     socket.on(chatEvents.contacts, async () => {
         try {
@@ -234,73 +194,6 @@ async function getUsrInfo(chatId, socket) {
         return errMsg;
     }
 }
-
-/**
- * @param {Socket} socket
- */
-const searchChats = (socket) => {
-    //? the chat with last message
-    try {
-        const userId = socket.userId;
-        socket.on(chatEvents.searchChats, async (value) => {
-            if (
-                value.includes("+") ||
-                value.includes("-") ||
-                value.includes("|") ||
-                value.includes("\\") ||
-                value.includes("=")
-            ) {
-                return;
-            }
-            // check chat that belong to the user Id
-            const searchedChats = await Chat.find({
-                members: { $in: userId },
-            })
-                .populate([
-                    {
-                        path: "members",
-                        model: "user",
-                    },
-                    {
-                        path: "messages",
-                        model: "message",
-                    },
-                ])
-                .select(["username", "messages"]);
-            let searchResults = [];
-            searchedChats?.map((chat) => {
-                const otherUser = chat.members.filter(
-                    (user) =>
-                        user._id !== userId &&
-                        user.username.includes(value.trim())
-                )[0];
-
-                if (!otherUser) return;
-
-                const lstMsg = chat.messages.pop();
-                const chatInfo = {
-                    Id: chat._id,
-                    userId: otherUser._id,
-                    status: otherUser.lastSeen,
-                    username: otherUser.username,
-                    avatarUrl: otherUser.avatarUrl,
-                    lastMessage: lstMsg.message,
-                    lstMsgDate: lstMsg.createdAt,
-                };
-                searchResults.push(chatInfo);
-            });
-            if (searchResults.length < 1) {
-                searchResults = "no chats found";
-            }
-            socket.emit(chatEvents.chatLastMsg, ...searchResults);
-        });
-    } catch (err) {
-        if (err instanceof MongooseError) {
-            const msg = err.message;
-            socketError(socket, chatEvents.errMsg, msg);
-        }
-    }
-};
 
 /**
  * Retrieve all connected sockets and join members of a chat to the socket room
