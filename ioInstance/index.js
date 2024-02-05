@@ -18,7 +18,7 @@ const {
 
 const io = new Server({
     cors: {
-        origin: ["http://localhost:5173"],
+        origin: ["https://youandi.vercel.app"],
         credentials: true,
     },
 });
