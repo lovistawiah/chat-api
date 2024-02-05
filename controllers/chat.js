@@ -75,6 +75,7 @@ const getChats = (socket) => {
  */
 const searchNewNOldChats = (socket) => {
     socket.on(chatEvents.search, async (value) => {
+        console.log(value);
         try {
             const userId = socket.userId;
             if (
@@ -97,6 +98,7 @@ const searchNewNOldChats = (socket) => {
                 .select(["username", "avatarUrl", "bio"])
                 .sort("asc");
             // emitting to the old and new chats
+            console.log(oldAndNewFriends);
             socket.emit(chatEvents.oldnNewChats, oldAndNewFriends);
         } catch (err) {
             if (err instanceof MongooseError) {
@@ -193,6 +195,43 @@ async function createChat(members) {
             const message = err.message;
             return message;
         }
+    }
+}
+/**
+ * Gets the other User Info from a new chat
+ *
+ * this is sent to client socket as a new chat created
+ * @param {import("mongoose").ObjectId} chatId
+ * @param {Socket} socket
+ * @returns
+ */
+async function getUsrInfo(chatId, socket) {
+    let errMsg;
+    try {
+        const chat = await Chat.findById(chatId).populate({
+            path: "members",
+            model: "user",
+        });
+        if (!chat) {
+            errMsg = "Chat not found";
+            return errMsg;
+        }
+        const userId = socket.userId;
+        const otherUsr = chat.members.filter(
+            (member) => member._id.toString() !== userId
+        )[0];
+
+        return {
+            Id: chat._id,
+            userId: otherUsr._id,
+            username: otherUsr.username,
+            avatarUrl: otherUsr.avatarUrl,
+        };
+    } catch (err) {
+        if (err instanceof MongooseError) {
+            errMsg = err.message;
+        }
+        return errMsg;
     }
 }
 
@@ -294,4 +333,5 @@ module.exports = {
     createChat,
     searchNewNOldChats,
     joinMemsToRoom,
+    getUsrInfo,
 };

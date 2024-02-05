@@ -1,6 +1,6 @@
 const Chat = require("../models/Chat");
 const Messages = require("../models/Messages");
-const { createChat, findChat, joinMemsToRoom } = require("./chat");
+const { createChat, findChat, joinMemsToRoom, getUsrInfo } = require("./chat");
 const { msgEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
 const { Socket, Server } = require("socket.io");
@@ -57,21 +57,31 @@ const createNewChatAndMessage = (io, socket) => {
     try {
         socket.on(msgEvents.newChat, async ({ userId, message }) => {
             if (!message) return;
+            let chatId, chatMems;
+
             const lgUsrId = socket.userId;
             if (!lgUsrId && !userId) return;
             const mems = [lgUsrId, userId];
+            //TODO: avoid duplication chat creation
+            //TODO: send the other usrInfo
+            const fndChat = await Chat.findOne({ members: { $all: mems } });
 
-            const createdChat = await createChat(mems);
-            if (
-                typeof createdChat !== "object" ||
-                typeof createdChat === undefined
-            ) {
-                const errMsg = createdChat ?? "Chat not created";
-                socketError(socket, msgEvents.errMsg, errMsg);
-                return;
+            if (fndChat) {
+                chatId = fndChat._id;
+                chatMems = findChat.members;
+            } else {
+                const createdChat = await createChat(mems);
+                if (
+                    typeof createdChat !== "object" ||
+                    createdChat === undefined
+                ) {
+                    const errMsg = createdChat ?? "Chat not created";
+                    socketError(socket, msgEvents.errMsg, errMsg);
+                    return;
+                }
+                chatId = createdChat.chatId;
+                chatMems = createdChat.members;
             }
-            const chatId = createdChat.chatId;
-            const chatMems = createdChat.members;
 
             chatMems.forEach((mem) => {
                 joinMemsToRoom(io, mem, chatId);
@@ -82,7 +92,7 @@ const createNewChatAndMessage = (io, socket) => {
                 sender: lgUsrId,
                 message,
             });
-            const msgEdited = {
+            const msgObj = {
                 Id: msgCreated._id,
                 message: msgCreated.message,
                 sender: msgCreated.sender,
@@ -91,8 +101,21 @@ const createNewChatAndMessage = (io, socket) => {
                 info: msgCreated.info,
             };
 
+            //get the logged UserId from the socket
+            const otherUser = await getUsrInfo(chatId, socket);
+
+            if (typeof otherUser !== "object" || otherUser === undefined) {
+                const errMsg = otherUser ?? "User not found";
+                socketError(socket, msgEvents.errMsg, errMsg);
+                return;
+            }
+            const newChatObj = {
+                msgObj,
+                newChat: otherUser,
+            };
+
             if (chatId) {
-                io.to(chatId.toString()).emit(msgEvents.newChat, msgEdited);
+                io.to(chatId.toString()).emit(msgEvents.newChat, newChatObj);
             }
             await Chat.findByIdAndUpdate(chatId, {
                 $push: { messages: msgCreated._id },
@@ -114,7 +137,7 @@ const createMessage = async (io, socket) => {
         socket.on(msgEvents.sndMsg, async ({ message, chatId }) => {
             if (!message) return;
             const fndChat = await findChat(chatId);
-            if (typeof fndChat !== "object" || typeof fndChat === undefined) {
+            if (typeof fndChat !== "object" || fndChat === undefined) {
                 const errMsg = fndChat ?? "Chat not found";
                 socketError(socket, msgEvents.errMsg, errMsg);
                 return;
