@@ -13,7 +13,7 @@ const getChats = (socket) => {
     socket.on(chatEvents.chatLastMsg, async () => {
         let msg = "";
         try {
-            const { userId } = socket.decoded;
+            const userId = socket.userId;
             const userChats = await Chat.find({
                 members: { $in: userId },
             })
@@ -76,7 +76,7 @@ const getChats = (socket) => {
 const searchNewNOldChats = (socket) => {
     socket.on(chatEvents.search, async (value) => {
         try {
-            const { userId } = socket.decoded;
+            const userId = socket.userId;
             if (
                 value.includes("+") ||
                 value.includes("-") ||
@@ -114,7 +114,7 @@ const searchNewNOldChats = (socket) => {
 const contacts = (socket) => {
     socket.on(chatEvents.contacts, async () => {
         try {
-            const { userId } = socket.decoded;
+            const userId = socket.userId;
 
             const friends = await User.find({
                 _id: { $ne: userId },
@@ -135,6 +135,7 @@ const contacts = (socket) => {
                         chatId: chat._id,
                         bio: friend.bio,
                     };
+
                     socket.emit(chatEvents.contacts, oldFriend);
                 } else {
                     const newContact = {
@@ -143,6 +144,7 @@ const contacts = (socket) => {
                         avatarUrl: friend.avatarUrl,
                         bio: friend.bio,
                     };
+
                     socket.emit(chatEvents.contacts, newContact);
                 }
             });
@@ -200,7 +202,7 @@ async function createChat(members) {
 const searchChats = (socket) => {
     //? the chat with last message
     try {
-        const { userId } = socket.decoded;
+        const userId = socket.userId;
         socket.on(chatEvents.searchChats, async (value) => {
             if (
                 value.includes("+") ||
@@ -261,6 +263,29 @@ const searchChats = (socket) => {
     }
 };
 
+/**
+ * Retrieve all connected sockets and join members of a chat to the socket room
+ *
+ * connects to a chatId when socket userId matches a member of chat
+ *
+ * this makes client members receive new chat and messages instantly
+ * @param {Server} io
+ * @param {import("mongoose").ObjectId} userId
+ * @param {import("mongoose").ObjectId} chatId
+ */
+const joinMemsToRoom = async (io, userId, chatId) => {
+    userId = userId.toString();
+    chatId = chatId.toString();
+    const sockets = await io.of("/").fetchSockets();
+    for (const sock of sockets) {
+        if (!sock.rooms.has(chatId)) {
+            if (sock.userId === userId) {
+                sock.join(chatId);
+            }
+        }
+    }
+};
+
 module.exports = {
     getChats,
     searchChats,
@@ -268,4 +293,5 @@ module.exports = {
     findChat,
     createChat,
     searchNewNOldChats,
+    joinMemsToRoom,
 };

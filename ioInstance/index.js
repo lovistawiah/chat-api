@@ -30,7 +30,6 @@ const io = new Server({
 io.use(authenticateSocket);
 
 io.on("connection", async (socket) => {
-    socket.userId = socket.decoded.userId;
     updateOnlineStatus(socket);
     updateOfflineStatus(socket);
     userStatus(socket);
@@ -50,7 +49,7 @@ io.on("connection", (socket) => {
     deleteMessage(socket, io);
     updateMessage(socket, io);
 });
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
     //from controller/chat.js
     getChats(socket);
     searchChats(socket);

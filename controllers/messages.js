@@ -1,12 +1,11 @@
 const Chat = require("../models/Chat");
 const Messages = require("../models/Messages");
-const { createChat, findChat } = require("./chat");
+const { createChat, findChat, joinMemsToRoom } = require("./chat");
 const { msgEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
 const { Socket, Server } = require("socket.io");
 const { default: mongoose } = require("mongoose");
 const Message = require("../models/Messages");
-const { joinRoom } = require("./userAccount");
 
 /**
  *
@@ -51,25 +50,53 @@ const getMessages = (socket) => {
 
 /**
  *
- * @param {new Server} io
+ * @param {Server} io
  * @param {Socket} socket
  */
 const createNewChatAndMessage = (io, socket) => {
     try {
         socket.on(msgEvents.newChat, async ({ userId, message }) => {
             if (!message) return;
-            const loggedUserId = socket.decoded.userId;
-            if (!loggedUserId && !userId) return;
-            const mems = [loggedUserId, userId];
+            const lgUsrId = socket.userId;
+            if (!lgUsrId && !userId) return;
+            const mems = [lgUsrId, userId];
 
             const createdChat = await createChat(mems);
-            if (!createdChat?.chatId) {
-                // emit error
+            if (
+                typeof createdChat !== "object" ||
+                typeof createdChat === undefined
+            ) {
+                const errMsg = createdChat ?? "Chat not created";
+                socketError(socket, msgEvents.errMsg, errMsg);
                 return;
             }
             const chatId = createdChat.chatId;
-            joinRoom(chatId.toString(), socket);
-            saveMessageAndSend({ socket, chatId, lgUsrId, message, io });
+            const chatMems = createdChat.members;
+
+            chatMems.forEach((mem) => {
+                joinMemsToRoom(io, mem, chatId);
+            });
+
+            const msgCreated = await Messages.create({
+                chatId: chatId,
+                sender: lgUsrId,
+                message,
+            });
+            const msgEdited = {
+                Id: msgCreated._id,
+                message: msgCreated.message,
+                sender: msgCreated.sender,
+                msgDate: msgCreated.createdAt,
+                chatId: msgCreated.chatId,
+                info: msgCreated.info,
+            };
+
+            if (chatId) {
+                io.to(chatId.toString()).emit(msgEvents.newChat, msgEdited);
+            }
+            await Chat.findByIdAndUpdate(chatId, {
+                $push: { messages: msgCreated._id },
+            });
         });
     } catch (err) {
         const msg = err.message;
@@ -78,24 +105,22 @@ const createNewChatAndMessage = (io, socket) => {
 };
 /**
  *
- * @param {new Server} io
+ * @param {Server} io
  * @param {Socket} socket
  */
 const createMessage = async (io, socket) => {
     try {
-        const lgUsrId = socket.decoded.userId;
+        const lgUsrId = socket.userId;
         socket.on(msgEvents.sndMsg, async ({ message, chatId }) => {
             if (!message) return;
             const fndChat = await findChat(chatId);
-
-            if (!fndChat?.chatId) {
-                const errMsg = "chat Id not found";
+            if (typeof fndChat !== "object" || typeof fndChat === undefined) {
+                const errMsg = fndChat ?? "Chat not found";
                 socketError(socket, msgEvents.errMsg, errMsg);
                 return;
             }
-            chatId = fndChat.chatId;
-            if (!chatId) return;
-            joinRoom(chatId, socket);
+            // sockets join room when connected and have chat.length > 0
+            // sockets join new chat when new chat and message is created
             saveMessageAndSend({ socket, chatId, lgUsrId, message, io });
         });
     } catch (err) {
@@ -106,7 +131,7 @@ const createMessage = async (io, socket) => {
 
 /**
  *
- * @param {new Server} io
+ * @param {Server} io
  * @param {Socket} socket
  */
 const deleteMessage = async (socket, io) => {
@@ -144,7 +169,7 @@ const deleteMessage = async (socket, io) => {
 
 /**
  * @param {Socket} socket
- * @param {new Server} io
+ * @param {Server} io
  */
 const updateMessage = (socket, io) => {
     try {
@@ -182,7 +207,7 @@ const updateMessage = (socket, io) => {
  * @param {mongoose.Types.ObjectId} chatId
  * @param {mongoose.Types.ObjectId} loggedUserId
  * @param {string} message
- *@param {new Server} io
+ *@param {Server} io
  */
 
 async function saveMessageAndSend({ socket, chatId, lgUsrId, message, io }) {
@@ -211,18 +236,7 @@ async function saveMessageAndSend({ socket, chatId, lgUsrId, message, io }) {
         socketError(socket, msgEvents.errMsg, msg);
     }
 }
-/**
- *
- * @param {string} chatId
- * @param {new Server} io
- * @param {string} eventName
- * @param {{any}} msgObj
- */
-const emitMsg = (chatId, io, eventName, msgObj) => {
-    if (chatId) {
-        io.to(chatId.toString()).emit(eventName, msgObj);
-    }
-};
+
 module.exports = {
     getMessages,
     createMessage,

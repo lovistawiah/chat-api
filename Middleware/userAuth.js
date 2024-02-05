@@ -34,7 +34,7 @@ const authenticateSocket = async (socket, next) => {
             next(err);
         }
 
-        socket.decoded = payload.userInfo;
+        socket.userId = userId;
         return next();
     } catch (err) {
         message = err.message;

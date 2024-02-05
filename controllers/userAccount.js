@@ -276,7 +276,7 @@ const userStatus = (socket) => {
  */
 const updateOnlineStatus = async (socket) => {
     try {
-        const userId = socket.decoded.userId;
+        const userId = socket.userId;
         const status = "Online";
         if (socket.connected) {
             const findUser = await User.findByIdAndUpdate(
@@ -305,7 +305,7 @@ const updateOnlineStatus = async (socket) => {
  */
 const updateOfflineStatus = async (socket) => {
     try {
-        const userId = socket.decoded.userId;
+        const userId = socket.userId;
         const status = new Date();
         socket.on("disconnecting", async () => {
             const findUser = await User.findByIdAndUpdate(
@@ -350,12 +350,15 @@ const typing = (socket) => {
  */
 const joinRooms = async (socket) => {
     try {
-        const userId = socket.decoded.userId;
+        const userId = socket.userId;
         const findChats = await Chat.find({ members: { $in: userId } });
+
         if (findChats && findChats.length > 0) {
             findChats.forEach((chat) => {
                 const chatRoom = chat._id.toString();
-                joinRoom(chatRoom);
+                if (!socket.rooms.has(chatRoom)) {
+                    socket.join(chatRoom);
+                }
             });
         }
     } catch (err) {
@@ -363,23 +366,6 @@ const joinRooms = async (socket) => {
             const errMsg = err.message;
             socketError(socket, chatEvents.errMsg, errMsg);
         }
-    }
-};
-
-/**
- *
- * @param {string} chatRoom
- * @param {Socket} socket
- */
-const joinRoom = (chatRoom, socket) => {
-    try {
-        if (chatRoom) {
-            const room = chatRoom.toString();
-            socket.join(room);
-        }
-    } catch (err) {
-        const msg = err.message;
-        socketError(socket, msgEvents.errMsg, msg);
     }
 };
 
@@ -391,7 +377,6 @@ module.exports = {
     updateOfflineStatus,
     updateOnlineStatus,
     joinRooms,
-    joinRoom,
     userStatus,
     userSettings,
 };
