@@ -15,7 +15,6 @@ const getMessages = (socket) => {
     socket.on(msgEvents.msgs, async (chatId) => {
         if (!chatId) return;
         try {
-            let msgDate;
             const chatMsgs = await Chat.findOne({
                 _id: chatId,
             }).populate({
@@ -25,21 +24,16 @@ const getMessages = (socket) => {
                 let { info, message, sender, createdAt, _id, updatedAt } =
                     msgInfo;
 
-                if (createdAt === updatedAt) {
-                    msgDate = createdAt;
-                } else {
-                    msgDate = updatedAt;
-                }
-
-                const msg = {
+                message = {
                     Id: _id,
                     info,
                     message,
                     sender,
-                    msgDate,
+                    createdAt,
+                    updatedAt,
                     chatId: chatMsgs._id,
                 };
-                socket.emit(msgEvents.msgs, msg);
+                socket.emit(msgEvents.msgs, message);
             });
         } catch (err) {
             const msg = err.message;
@@ -96,7 +90,8 @@ const createNewChatAndMessage = (io, socket) => {
                 Id: msgCreated._id,
                 message: msgCreated.message,
                 sender: msgCreated.sender,
-                msgDate: msgCreated.createdAt,
+                updatedAt: msgCreated.updatedAt,
+                createdAt: msgCreated.createdAt,
                 chatId: msgCreated.chatId,
                 info: msgCreated.info,
             };
@@ -172,16 +167,17 @@ const deleteMessage = async (socket, io) => {
                 return;
             }
 
-            const msg = {
+            const message = {
                 Id: msgId,
                 info: msgUpdated.info,
                 message: msgUpdated.message,
                 sender: msgUpdated.sender,
-                msgDate: msgUpdated.updatedAt,
+                createdAt: msgUpdated.createdAt,
+                updatedAt: msgUpdated.updatedAt,
                 chatId,
             };
             if (chatId) {
-                io.to(chatId.toString()).emit(msgEvents.delMsg, msg);
+                io.to(chatId.toString()).emit(msgEvents.delMsg, message);
             }
         });
     } catch (err) {
@@ -197,7 +193,7 @@ const deleteMessage = async (socket, io) => {
 const updateMessage = (socket, io) => {
     try {
         socket.on(msgEvents.updateMsg, async (data) => {
-            const { msgId, message } = data;
+            let { msgId, message } = data;
             if (!msgId && !message) return;
             const findMsg = await Message.findByIdAndUpdate(
                 msgId,
@@ -206,16 +202,17 @@ const updateMessage = (socket, io) => {
             );
             if (!findMsg) return;
             const chatId = findMsg.chatId;
-            const msg = {
+            message = {
                 Id: msgId,
                 info: findMsg.info,
                 message: findMsg.message,
                 sender: findMsg.sender,
-                msgDate: findMsg.updatedAt,
+                createdAt: findMsg.createdAt,
+                updatedAt: findMsg.updatedAt,
                 chatId,
             };
             if (chatId) {
-                io.to(chatId.toString()).emit(msgEvents.updateMsg, msg);
+                io.to(chatId.toString()).emit(msgEvents.updateMsg, message);
             }
         });
     } catch (err) {
@@ -240,16 +237,17 @@ async function saveMessageAndSend({ socket, chatId, lgUsrId, message, io }) {
             sender: lgUsrId,
             message,
         });
-        const msgEdited = {
+        message = {
             Id: msgCreated._id,
             message: msgCreated.message,
             sender: msgCreated.sender,
-            msgDate: msgCreated.createdAt,
+            createdAt: msgCreated.createdAt,
+            updatedAt: msgCreated.updatedAt,
             chatId: msgCreated.chatId,
             info: msgCreated.info,
         };
         if (chatId) {
-            io.to(chatId.toString()).emit(msgEvents.sndMsg, msgEdited);
+            io.to(chatId.toString()).emit(msgEvents.sndMsg, message);
         }
         await Chat.findByIdAndUpdate(chatId, {
             $push: { messages: msgCreated._id },
