@@ -1,6 +1,11 @@
 const Chat = require("../models/Chat");
 const Messages = require("../models/Messages");
-const { createChat, findChat, joinMemsToRoom, getUsrInfo } = require("./chat");
+const {
+    createChat,
+    findChat,
+    joinMemsToRoom,
+    modifyMemsInfo,
+} = require("./chat");
 const { msgEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
 const { Socket, Server } = require("socket.io");
@@ -96,22 +101,38 @@ const createNewChatAndMessage = (io, socket) => {
                 info: msgCreated.info,
             };
 
-            //get the logged UserId from the socket
-            const otherUser = await getUsrInfo(chatId, socket);
+            const modifiedMems = await modifyMemsInfo(chatId);
 
-            if (typeof otherUser !== "object" || otherUser === undefined) {
-                const errMsg = otherUser ?? "User not found";
-                socketError(socket, msgEvents.errMsg, errMsg);
-                return;
-            }
-            const newChatObj = {
-                msgObj,
-                newChat: otherUser,
-            };
+            const sockets = await io.of("/").fetchSockets();
+            if (Array.isArray(modifiedMems)) {
+                modifiedMems.forEach((member) => {
+                    for (const sock of sockets) {
+                        if (sock.userId === member.userId.toString()) {
+                            let newChat = modifiedMems.filter(
+                                (mem) => mem.userId.toString() !== sock.userId
+                            )[0];
 
-            if (chatId) {
-                io.to(chatId.toString()).emit(msgEvents.newChat, newChatObj);
+                            newChat = {
+                                Id: msgCreated.chatId,
+                                ...newChat,
+                            };
+
+                            console.log(sock.userId, sock.rooms, newChat);
+                            sock.emit(msgEvents.newChat, { newChat, msgObj });
+                        }
+                    }
+                });
+            } else {
+                if (
+                    !Array.isArray(modifyMemsInfo) ||
+                    modifyMemsInfo === undefined
+                ) {
+                    const errMsg = modifyMemsInfo ?? "Members not found";
+                    socketError(socket, msgEvents.errMsg, errMsg);
+                    return;
+                }
             }
+
             await Chat.findByIdAndUpdate(chatId, {
                 $push: { messages: msgCreated._id },
             });

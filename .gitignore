@@ -4,3 +4,5 @@ controllers/allData.js
 controllers/utils.js
 package-lock.json
 keyFile.json
+key.js
+testing.txt
