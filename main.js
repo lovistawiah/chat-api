@@ -17,7 +17,7 @@ const MONGO_URI = process.env.MONGO_URI;
 // use only in dev mode
 app.use(morgan("dev"));
 
-app.use(cors({ origin: true }));
+app.use(cors({ origin: ["http://localhost:5173", "http://172.20.10.2:5173"] }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use("/api", router);

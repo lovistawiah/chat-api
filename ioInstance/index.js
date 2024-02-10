@@ -18,7 +18,7 @@ const {
 
 const io = new Server({
     cors: {
-        origin: ["http://172.20.10.2:5173"],
+        origin: ["http://localhost:5173", "http://172.20.10.2:5173"],
         credentials: true,
     },
 });
@@ -33,6 +33,7 @@ io.on("connection", async (socket) => {
     socket.on("error", (err) => {
         const msg = err.message;
         socket.emit("error", msg);
+        console.log(msg);
     });
 });
 

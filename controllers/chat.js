@@ -91,7 +91,7 @@ const contacts = (socket) => {
 
                 if (chat) {
                     const oldFriend = {
-                        _id: friend._id,
+                        Id: friend._id,
                         username: friend.username,
                         avatarUrl: friend.avatarUrl,
                         chatId: chat._id,
@@ -101,7 +101,7 @@ const contacts = (socket) => {
                     socket.emit(chatEvents.contacts, oldFriend);
                 } else {
                     const newContact = {
-                        _id: friend._id,
+                        Id: friend._id,
                         username: friend.username,
                         avatarUrl: friend.avatarUrl,
                         bio: friend.bio,
@@ -158,35 +158,30 @@ async function createChat(members) {
     }
 }
 /**
- * Gets the other User Info from a new chat
+ * Add chatId to each member account
  *
- * this is sent to client socket as a new chat created
  * @param {import("mongoose").ObjectId} chatId
- * @param {Socket} socket
- * @returns
  */
-async function getUsrInfo(chatId, socket) {
+async function modifyMemsInfo(chatId) {
     let errMsg;
     try {
-        const chat = await Chat.findById(chatId).populate({
-            path: "members",
-            model: "user",
-        });
+        const chat = await Chat.findById(chatId)
+            .populate({
+                path: "members",
+                model: "user",
+            })
+            .select(["username", "avatarUrl"]);
         if (!chat) {
             errMsg = "Chat not found";
             return errMsg;
         }
-        const userId = socket.userId;
-        const otherUsr = chat.members.filter(
-            (member) => member._id.toString() !== userId
-        )[0];
-
-        return {
-            Id: chat._id,
-            userId: otherUsr._id,
-            username: otherUsr.username,
-            avatarUrl: otherUsr.avatarUrl,
-        };
+        return chat.members.map((member) => {
+            return {
+                userId: member._id,
+                username: member.username,
+                avatarUrl: member.avatarUrl,
+            };
+        });
     } catch (err) {
         if (err instanceof MongooseError) {
             errMsg = err.message;
@@ -224,5 +219,5 @@ module.exports = {
     findChat,
     createChat,
     joinMemsToRoom,
-    getUsrInfo,
+    modifyMemsInfo,
 };
