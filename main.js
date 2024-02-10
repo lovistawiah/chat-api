@@ -13,7 +13,7 @@ const app = express();
 const server = http.createServer(app); // Attach Express app to the HTTP server
 const MONGO_URI = process.env.MONGO_URI;
 
-app.use(cors({ origin: true }));
+app.use(cors({ origin: ["https://youandi.vercel.app/"] }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use("/api", router);
