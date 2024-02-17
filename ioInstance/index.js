@@ -7,6 +7,7 @@ const {
     deleteMessage,
     updateMessage,
     createNewChatAndMessage,
+    replyMessage,
 } = require("../controllers/messages");
 const {
     updateOnlineStatus,
@@ -44,6 +45,7 @@ io.on("connection", (socket) => {
     getMessages(socket);
     deleteMessage(socket, io);
     updateMessage(socket, io);
+    replyMessage(socket, io);
 });
 io.on("connection", async (socket) => {
     //from controller/chat.js

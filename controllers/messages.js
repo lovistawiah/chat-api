@@ -9,7 +9,7 @@ const {
 const { msgEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
 const { Socket, Server } = require("socket.io");
-const { default: mongoose } = require("mongoose");
+const { default: mongoose, MongooseError } = require("mongoose");
 const Message = require("../models/Messages");
 
 /**
@@ -241,6 +241,36 @@ const updateMessage = (socket, io) => {
         socketError(socket, msgEvents.errMsg, msg);
     }
 };
+/**
+ *
+ * @param {Socket} socket
+ * @param {Server} io
+ */
+const replyMessage = (socket, io) => {
+    try {
+        socket.on(msgEvents.reply, async ({ msgId, chatId, message }) => {
+            console.log(msgId, chatId, message);
+            if (!msgId || !chatId || !message) return;
+            const repliedMessage = await Message.create({
+                chatId,
+                sender: socket.userId,
+                message,
+                // populate before the message Id in the reply object for sending
+                reply: {
+                    message: msgId,
+                    sender: socket.userId,
+                },
+            });
+            console.log(repliedMessage);
+            io.to(chatId.toString()).emit(msgEvents.reply, repliedMessage);
+        });
+    } catch (err) {
+        if (err instanceof MongooseError) {
+            const message = err.message;
+            socketError(socket, msgEvents.errMsg, message);
+        }
+    }
+};
 
 /**
  *
@@ -285,4 +315,5 @@ module.exports = {
     deleteMessage,
     updateMessage,
     createNewChatAndMessage,
+    replyMessage,
 };

@@ -23,6 +23,16 @@ const messageSchema = new mongoose.Schema(
             enum: ["created", "edited", "deleted"],
             default: "created",
         },
+        reply: {
+            sender: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "user",
+            },
+            message: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "message",
+            },
+        },
     },
     { timestamps: true }
 );
