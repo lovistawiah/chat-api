@@ -261,7 +261,6 @@ const replyMessage = (socket, io) => {
                     sender: socket.userId,
                 },
             });
-            console.log(repliedMessage);
             io.to(chatId.toString()).emit(msgEvents.reply, repliedMessage);
         });
     } catch (err) {
