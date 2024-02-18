@@ -24,14 +24,8 @@ const messageSchema = new mongoose.Schema(
             default: "created",
         },
         reply: {
-            sender: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "user",
-            },
-            message: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "message",
-            },
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "message",
         },
     },
     { timestamps: true }

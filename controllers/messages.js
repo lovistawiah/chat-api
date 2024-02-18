@@ -11,6 +11,7 @@ const { socketError } = require("../ioInstance/socketError");
 const { Socket, Server } = require("socket.io");
 const { default: mongoose, MongooseError } = require("mongoose");
 const Message = require("../models/Messages");
+const User = require("../models/Users");
 
 /**
  *
@@ -26,6 +27,10 @@ const getMessages = (socket) => {
                 path: "messages",
             });
             chatMsgs.messages.forEach((msgInfo) => {
+                // if (msgInfo.reply) {
+                console.log(msgInfo);
+                // }
+
                 let { info, message, sender, createdAt, _id, updatedAt } =
                     msgInfo;
 
@@ -61,8 +66,6 @@ const createNewChatAndMessage = (io, socket) => {
             const lgUsrId = socket.userId;
             if (!lgUsrId && !userId) return;
             const mems = [lgUsrId, userId];
-            //TODO: avoid duplication chat creation
-            //TODO: send the other usrInfo
             const fndChat = await Chat.findOne({ members: { $all: mems } });
 
             if (fndChat) {
@@ -116,8 +119,6 @@ const createNewChatAndMessage = (io, socket) => {
                                 Id: msgCreated.chatId,
                                 ...newChat,
                             };
-
-                            console.log(sock.userId, sock.rooms, newChat);
                             sock.emit(msgEvents.newChat, { newChat, msgObj });
                         }
                     }
@@ -132,6 +133,10 @@ const createNewChatAndMessage = (io, socket) => {
                     return;
                 }
             }
+
+            chatMems.forEach(async (mem) => {
+                await User.findByIdAndUpdate(mem, { $push: { chats: chatId } });
+            });
 
             await Chat.findByIdAndUpdate(chatId, {
                 $push: { messages: msgCreated._id },
@@ -247,20 +252,40 @@ const updateMessage = (socket, io) => {
  * @param {Server} io
  */
 const replyMessage = (socket, io) => {
+    let message = "";
     try {
         socket.on(msgEvents.reply, async ({ msgId, chatId, message }) => {
             console.log(msgId, chatId, message);
             if (!msgId || !chatId || !message) return;
-            const repliedMessage = await Message.create({
+            const findMsg = await Message.findById(msgId);
+
+            if (!findMsg) {
+                message = "original message not found";
+                socketError(socket, msgEvents.errMsg, message);
+                return;
+            }
+
+            const msgCreated = await Message.create({
                 chatId,
                 sender: socket.userId,
                 message,
-                // populate before the message Id in the reply object for sending
-                reply: {
-                    message: msgId,
-                    sender: socket.userId,
-                },
+                reply: findMsg._id,
             });
+            const repliedMessage = {
+                Id: msgCreated._id,
+                message: msgCreated.message,
+                sender: msgCreated.sender,
+                createdAt: msgCreated.createdAt,
+                updatedAt: msgCreated.updatedAt,
+                chatId: msgCreated.chatId,
+                info: msgCreated.info,
+                reply: {
+                    Id: findMsg._id,
+                    message: findMsg.message,
+                    sender: findMsg.sender,
+                    info: findMsg.info,
+                },
+            };
             io.to(chatId.toString()).emit(msgEvents.reply, repliedMessage);
         });
     } catch (err) {
