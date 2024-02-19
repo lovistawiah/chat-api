@@ -133,7 +133,6 @@ const createNewChatAndMessage = (io, socket) => {
                     return;
                 }
             }
-
             chatMems.forEach(async (mem) => {
                 await User.findByIdAndUpdate(mem, { $push: { chats: chatId } });
             });
