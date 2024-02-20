@@ -5,7 +5,6 @@ const {
     findChat,
     joinMemsToRoom,
     modifyMemsInfo,
-    addChatIdToUsers,
 } = require("./chat");
 const { msgEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
@@ -63,24 +62,15 @@ const createNewChatAndMessage = (io, socket) => {
             const lgUsrId = socket.userId;
             if (!lgUsrId && !userId) return;
             const mems = [lgUsrId, userId];
-            const fndChat = await Chat.findOne({ members: { $all: mems } });
+            const createdChat = await createChat(mems);
 
-            if (fndChat) {
-                chatId = fndChat._id;
-                chatMems = fndChat.members;
-            } else {
-                const createdChat = await createChat(mems);
-                if (
-                    typeof createdChat !== "object" ||
-                    createdChat === undefined
-                ) {
-                    const errMsg = createdChat ?? "Chat not created";
-                    socketError(socket, msgEvents.errMsg, errMsg);
-                    return;
-                }
-                chatId = createdChat.chatId;
-                chatMems = createdChat.members;
+            if (typeof createdChat !== "object" || createdChat === undefined) {
+                const errMsg = createdChat ?? "Chat not created";
+                socketError(socket, msgEvents.errMsg, errMsg);
+                return;
             }
+            chatId = createdChat.chatId;
+            chatMems = createdChat.members;
 
             chatMems.forEach((mem) => {
                 joinMemsToRoom(io, mem, chatId);
@@ -176,7 +166,7 @@ const deleteMessage = async (socket, io) => {
             const { msgId, chatId } = data;
             const msgUpdated = await Message.findByIdAndUpdate(
                 msgId,
-                { message: "this message was deleted", info: "deleted" },
+                { info: "deleted" },
                 { new: true }
             );
 
@@ -188,7 +178,10 @@ const deleteMessage = async (socket, io) => {
             const message = {
                 Id: msgId,
                 info: msgUpdated.info,
-                message: msgUpdated.message,
+                message:
+                    msgUpdated.info !== "deleted"
+                        ? msgUpdated.message
+                        : "this message was deleted",
                 sender: msgUpdated.sender,
                 createdAt: msgUpdated.createdAt,
                 updatedAt: msgUpdated.updatedAt,
@@ -262,6 +255,7 @@ const replyMessage = (socket, io) => {
                 message,
                 reply: findMsg._id,
             });
+
             const repliedMessage = {
                 Id: msgCreated._id,
                 message: msgCreated.message,
@@ -298,11 +292,12 @@ const replyMessage = (socket, io) => {
 
 async function saveMessageAndSend({ socket, chatId, lgUsrId, message, io }) {
     try {
-        const msgCreated = await Messages.create({
+        const msgObj = {
             chatId: chatId,
             sender: lgUsrId,
             message,
-        });
+        };
+        const msgCreated = await Messages.create(msgObj);
         message = {
             Id: msgCreated._id,
             message: msgCreated.message,

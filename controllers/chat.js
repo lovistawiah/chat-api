@@ -145,8 +145,15 @@ async function findChat(chatId) {
  */
 async function createChat(members) {
     try {
-        const createdChat = await Chat.create({ members });
+        const fndChat = await Chat.findOne({ members: { $all: mems } });
+        if (fndChat) {
+            return {
+                chatId: fndChat._id,
+                chatMems: fndChat.members,
+            };
+        }
 
+        const createdChat = await Chat.create({ members });
         if (createdChat) {
             createdChat.members.forEach((memberId) => {
                 console.log(memberId);
