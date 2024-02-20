@@ -146,6 +146,14 @@ async function findChat(chatId) {
 async function createChat(members) {
     try {
         const createdChat = await Chat.create({ members });
+
+        if (createdChat) {
+            createdChat.members.forEach((memberId) => {
+                console.log(memberId);
+                addChatIdToUsers(createdChat._id, memberId);
+            });
+        }
+
         return {
             chatId: createdChat._id,
             members: createdChat.members,
@@ -156,6 +164,14 @@ async function createChat(members) {
             return message;
         }
     }
+}
+/**
+ *
+ * @param {import("mongoose").ObjectId} chatId
+ * @param {import("mongoose").ObjectId} memberId
+ */
+async function addChatIdToUsers(chatId, memberId) {
+    await User.findByIdAndUpdate(memberId, { $push: { chats: chatId } });
 }
 /**
  * Add chatId to each member account
@@ -220,4 +236,5 @@ module.exports = {
     createChat,
     joinMemsToRoom,
     modifyMemsInfo,
+    addChatIdToUsers,
 };

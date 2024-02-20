@@ -34,7 +34,6 @@ io.on("connection", async (socket) => {
     socket.on("error", (err) => {
         const msg = err.message;
         socket.emit("error", msg);
-        console.log(msg);
     });
 });
 

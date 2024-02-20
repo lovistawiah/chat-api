@@ -5,6 +5,7 @@ const {
     findChat,
     joinMemsToRoom,
     modifyMemsInfo,
+    addChatIdToUsers,
 } = require("./chat");
 const { msgEvents } = require("../utils/index");
 const { socketError } = require("../ioInstance/socketError");
@@ -27,10 +28,6 @@ const getMessages = (socket) => {
                 path: "messages",
             });
             chatMsgs.messages.forEach((msgInfo) => {
-                // if (msgInfo.reply) {
-                console.log(msgInfo);
-                // }
-
                 let { info, message, sender, createdAt, _id, updatedAt } =
                     msgInfo;
 
@@ -70,7 +67,7 @@ const createNewChatAndMessage = (io, socket) => {
 
             if (fndChat) {
                 chatId = fndChat._id;
-                chatMems = findChat.members;
+                chatMems = fndChat.members;
             } else {
                 const createdChat = await createChat(mems);
                 if (
@@ -133,10 +130,6 @@ const createNewChatAndMessage = (io, socket) => {
                     return;
                 }
             }
-            chatMems.forEach(async (mem) => {
-                await User.findByIdAndUpdate(mem, { $push: { chats: chatId } });
-            });
-
             await Chat.findByIdAndUpdate(chatId, {
                 $push: { messages: msgCreated._id },
             });
@@ -254,7 +247,6 @@ const replyMessage = (socket, io) => {
     let message = "";
     try {
         socket.on(msgEvents.reply, async ({ msgId, chatId, message }) => {
-            console.log(msgId, chatId, message);
             if (!msgId || !chatId || !message) return;
             const findMsg = await Message.findById(msgId);
 
