@@ -31,6 +31,7 @@
     "socket.io": "^4.6.2"
   },
   "devDependencies": {
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "typescript": "^5.3.3"
   }
 }

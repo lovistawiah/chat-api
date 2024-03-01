@@ -6,9 +6,9 @@ const http = require("http");
 const morgan = require("morgan");
 
 //local files
-const ioInstance = require("./ioInstance/index");
-const router = require("./routes/routes");
-const connection = require("./db/connection");
+const ioInstance = require("./src/ioInstance/index");
+const router = require("./src/routes/routes");
+const connection = require("./src/db/connection");
 
 const app = express();
 const server = http.createServer(app); // Attach Express app to the HTTP server

@@ -54,14 +54,13 @@ const signup = async (req, res) => {
             res.status(401).json({ message });
             return;
         }
-        message = "account created";
         const userInfo = {
             userId: user._id,
             username: user.username,
             avatarUrl: user.avatarUrl,
             bio: user.bio,
         };
-        res.status(200).json({ message, userInfo });
+        res.status(200).json({ userInfo });
         return;
     } catch (err) {
         if (err instanceof MongooseError) {
@@ -115,7 +114,7 @@ const login = async (req, res) => {
             avatarUrl: user.avatarUrl,
         };
 
-        res.status(200).json({ message: "ok", token, userInfo: userObj });
+        res.status(200).json({ token, userInfo: userObj });
         return;
     } catch (err) {
         if (err instanceof MongooseError) {
