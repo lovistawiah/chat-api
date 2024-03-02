@@ -1,10 +1,10 @@
 import 'dotenv/config'
-import express, { Application, Request, Response } from 'express'
+import express, { Application } from 'express'
 import cors from 'cors'
 import http from 'http'
 import morgan from 'morgan'
 
-//local files
+// local files
 import ioInstance from "./src/ioInstance/index.js";
 import router from './src/routes/routes.js';
 import connection from './src/db/connection.js';
@@ -25,15 +25,16 @@ app.use("/api", router);
 ioInstance.attach(server);
 
 const PORT = process.env.PORT || 5000;
-async function start(url: ) {
+async function start(url: string) {
+    if (!url) return
     try {
         await connection(url);
         server.listen(PORT, () => {
             console.log(`listening on http://localhost:${PORT}`);
         });
     } catch (err) {
-        throw new Error(err.message);
+        console.log(err)
     }
 }
 
-start(MONGO_URI);
+start(MONGO_URI ?? "");
