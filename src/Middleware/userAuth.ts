@@ -3,7 +3,7 @@ import { Socket } from 'socket.io';
 import { verifyToken } from '../utils/token.js'
 
 
-const authenticateSocket = async (socket: Socket, next: (arg0: unknown) => void) => {
+const authenticateSocket = async (socket: Socket, next: any) => {
     let message = "";
     let { token } = socket.handshake.auth;
     if (!token) {

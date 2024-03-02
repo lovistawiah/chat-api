@@ -1,11 +1,6 @@
-const User = require("../models/Users");
-const { v4: uuid } = require("uuid");
-/**
- *
- * @param {string} email
- * @returns
- */
-async function getUserNameFromEmail(email) {
+import User from '../models/Users.js'
+
+async function getUserNameFromEmail(email: string) {
     let isUnique = false;
     let message = "";
 
@@ -21,15 +16,12 @@ async function getUserNameFromEmail(email) {
             isUnique = true;
             return username;
         }
-        const splitUniqueId = uuid().split("-")[1];
+        const splitUniqueId = new Date().getTime().toString().slice(0, 3)
         username += splitUniqueId;
     }
 }
-/**
- *
- * @param {string} string
- */
-function sanitize(string) {
+
+function sanitize(string: string) {
     return string.toLowerCase().trim();
 }
 module.exports = { getUserNameFromEmail, sanitize };

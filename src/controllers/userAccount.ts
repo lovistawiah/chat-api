@@ -1,20 +1,16 @@
-const bcrypt = require("bcrypt");
-const User = require("../models/Users");
-const { usrEvents, chatEvents, msgEvents } = require("../utils/index");
-const { getUserNameFromEmail, sanitize } = require("../utils/user");
-const { Socket } = require("socket.io");
-const { createToken } = require("../utils/token");
-const Chat = require("../models/Chat");
-const { MongooseError } = require("mongoose");
-const { socketError } = require("../ioInstance/socketError");
+import bcrypt from 'bcrypt'
+import User from '../models/Users.js'
+import { usrEvents, chatEvents, msgEvents } from '../utils/index.js'
+import { Socket } from 'socket.io';
+import { getUserNameFromEmail, sanitize } from '../utils/user.js'
+import { createToken } from '../utils/token.js'
+import Chat from '../models/Chat.js'
+import { MongooseError } from 'mongoose'
+import { socketError } from '../ioInstance/socketError.js'
+import { Request, Response } from 'express';
 
-/**
- *
- * @param {import("express").Request} req
- * @param {import("express").Response} res
- * @returns {Promise<void>}
- */
-const signup = async (req, res) => {
+
+const signup = async (req: Request, res: Response) => {
     let message = "";
     try {
         let { email, password, confirmPassword } = req.body;
@@ -61,22 +57,17 @@ const signup = async (req, res) => {
             bio: user.bio,
         };
         res.status(200).json({ userInfo });
-        
+
     } catch (err) {
         if (err instanceof MongooseError) {
             const message = err.message;
-            res.status(StatusCode).json({ message });
+            res.status(500).json({ message });
         }
     }
 };
 
-/**
- *
- * @param {import("express").Request} req
- * @param {import("express").Response} res
- * @returns
- */
-const login = async (req, res) => {
+
+const login = async (req: Request, res: Response) => {
     let message = "";
     try {
         let { usernameEmail, password } = req.body;
@@ -115,7 +106,7 @@ const login = async (req, res) => {
         };
 
         res.status(200).json({ token, userInfo: userObj });
-        
+
     } catch (err) {
         if (err instanceof MongooseError) {
             const message = err.message;
@@ -124,12 +115,8 @@ const login = async (req, res) => {
     }
 };
 
-/**
- * @param {Request} req
- * @param {Response} res
- * @returns {Promise<void>}
- */
-const updateUserInfo = async (req, res) => {
+
+const updateUserInfo = async (req: Request, res: Response) => {
     let { userId, username } = req.body;
     username = sanitize(username);
     try {
@@ -163,17 +150,13 @@ const updateUserInfo = async (req, res) => {
     } catch (err) {
         if (err instanceof MongooseError) {
             const message = err.message;
-            res.status(statusCode).json({ message });
+            res.status(500).json({ message });
         }
     }
 };
 
-/**
- * @param {Request} req
- * @param {Response} res
- * @returns {Promise<void>}
- */
-const userSettings = async (req, res) => {
+
+const userSettings = async (req: Request, res: Response) => {
     let message = "";
     try {
         let {
@@ -247,7 +230,7 @@ const userSettings = async (req, res) => {
             bio: findUsr.bio,
         };
         res.status(200).json({ message, userInfo });
-        
+
     } catch (err) {
         if (err instanceof MongooseError) {
             message = err.message;
@@ -256,11 +239,8 @@ const userSettings = async (req, res) => {
     }
 };
 
-/**
- *
- * @param {Socket} socket
- */
-const userStatus = (socket) => {
+
+const userStatus = (socket: Socket) => {
     socket.on(usrEvents.status, async (userId) => {
         const findUser = await User.findById(userId);
         if (!findUser) return;
@@ -269,11 +249,8 @@ const userStatus = (socket) => {
     });
 };
 
-/**
- *
- * @param {Socket} socket
- */
-const updateOnlineStatus = async (socket) => {
+
+const updateOnlineStatus = async (socket: Socket) => {
     try {
         const userId = socket.userId;
         const status = "Online";
@@ -298,11 +275,8 @@ const updateOnlineStatus = async (socket) => {
         }
     }
 };
-/**
- *
- * @param {Socket} socket
- */
-const updateOfflineStatus = async (socket) => {
+
+const updateOfflineStatus = async (socket: Socket) => {
     try {
         const userId = socket.userId;
         const status = new Date();
@@ -329,11 +303,8 @@ const updateOfflineStatus = async (socket) => {
     }
 };
 
-/**
- *
- * @param {Socket} socket
- */
-const typing = (socket) => {
+
+const typing = (socket: Socket) => {
     socket.on(usrEvents.typing, async (data) => {
         const { chatId } = data;
         if (!chatId) return;
@@ -343,11 +314,8 @@ const typing = (socket) => {
     });
 };
 
-/**
- *
- * @param {Socket} socket
- */
-const joinRooms = async (socket) => {
+
+const joinRooms = async (socket: Socket) => {
     try {
         const userId = socket.userId;
         const findChats = await Chat.find({ members: { $in: userId } });
@@ -368,7 +336,7 @@ const joinRooms = async (socket) => {
     }
 };
 
-module.exports = {
+export {
     signup,
     login,
     typing,
