@@ -1,14 +1,7 @@
-const { Socket } = require("socket.io");
+import { Socket } from 'socket.io'
 
-/**
- *
- * @param {Socket} socket
- * @param {string} eventName
- * @param {string} message
- * @returns
- */
-function socketError(socket, eventName, message) {
+function socketError(socket: Socket, eventName: string, message: string) {
     socket.emit(eventName, message);
-    
+
 }
-module.exports = { socketError };
+export { socketError };
