@@ -19,12 +19,14 @@
     "browser": false,
     "es6": true
   },
-  "import/parsers": {
-    "@typescript-eslint/parser": [".ts"]
-  },
-  "import/resolver": {
-    "typescript": {
-      "alwaysTryTypes": true
+  "settings": {
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts"]
+    },
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true
+      }
     }
   }
 }
