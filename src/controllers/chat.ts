@@ -3,7 +3,7 @@ import { socketError } from '../ioInstance/socketError.js';
 import Chat from '../models/Chat.js';
 import User from '../models/Users.js';
 import { chatEvents } from '../utils/index.js';
-import { MongooseError, ObjectId, Schema, Types } from 'mongoose';
+import { MongooseError, ObjectId, Types } from 'mongoose';
 
 const getChats = (socket: Socket) => {
     socket.on(chatEvents.chatLastMsg, async () => {
@@ -111,7 +111,7 @@ const contacts = (socket: Socket) => {
     });
 };
 
-async function findChat(chatId: Schema.Types.ObjectId) {
+async function findChat(chatId: Types.ObjectId) {
     try {
         const fndChat = await Chat.findById(chatId);
         if (!fndChat) return;
@@ -127,7 +127,7 @@ async function findChat(chatId: Schema.Types.ObjectId) {
     }
 }
 
-async function createChat(members: Schema.Types.ObjectId[]) {
+async function createChat(members: Types.ObjectId[]) {
     try {
         const fndChat = await Chat.findOne({ members: { $all: members } });
         if (fndChat) {
@@ -193,8 +193,8 @@ async function modifyMemsInfo(chatId: ObjectId) {
 
 const joinMemsToRoom = async (
     io: Server,
-    userId: Schema.Types.ObjectId,
-    chatId: Schema.Types.ObjectId
+    userId: Types.ObjectId,
+    chatId: Types.ObjectId
 ) => {
     const sockets = await io.of('/').fetchSockets();
     for (const sock of sockets) {

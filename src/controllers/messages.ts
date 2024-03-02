@@ -8,7 +8,7 @@ import {
 import { msgEvents } from '../utils/index.js';
 import { socketError } from '../ioInstance/socketError.js';
 import { Socket, Server } from 'socket.io';
-import mongoose, { MongooseError, Schema } from 'mongoose';
+import { MongooseError, Schema } from 'mongoose';
 import Message from '../models/Messages.js';
 import User from '../models/Users.js';
 
@@ -24,7 +24,7 @@ const getMessages = (socket: Socket) => {
             if (!chatMsgs) return;
             chatMsgs.messages.forEach((msgInfo) => {
                 let { info, message, sender, createdAt, _id, updatedAt } =
-                    msgInfo;
+                    msgInfo as any;
 
                 message = {
                     Id: _id,
@@ -48,9 +48,9 @@ const createNewChatAndMessage = (io: Server, socket: Socket) => {
     try {
         socket.on(msgEvents.newChat, async ({ userId, message }) => {
             if (!message) return;
-            let chatId, chatMems;
 
-            const lgUsrId = socket.userId;
+
+            const lgUsrId = socket.data.userId;
             if (!lgUsrId && !userId) return;
             const mems = [lgUsrId, userId];
             const createdChat = await createChat(mems);
@@ -60,8 +60,8 @@ const createNewChatAndMessage = (io: Server, socket: Socket) => {
                 socketError(socket, msgEvents.errMsg, errMsg);
                 return;
             }
-            chatId = createdChat.chatId;
-            chatMems = createdChat.members;
+            const chatId = createdChat.chatId;
+            const chatMems = createdChat.members;
 
             chatMems.forEach((mem) => {
                 joinMemsToRoom(io, mem, chatId);
