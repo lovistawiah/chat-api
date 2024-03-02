@@ -24,4 +24,4 @@ async function getUserNameFromEmail(email: string) {
 function sanitize(string: string) {
     return string.toLowerCase().trim();
 }
-module.exports = { getUserNameFromEmail, sanitize };
+export { getUserNameFromEmail, sanitize };

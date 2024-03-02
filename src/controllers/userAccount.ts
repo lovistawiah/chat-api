@@ -8,6 +8,7 @@ import Chat from '../models/Chat.js';
 import { MongooseError } from 'mongoose';
 import { socketError } from '../ioInstance/socketError.js';
 import { Request, Response } from 'express';
+import { mongooseError } from '../error/mongooseError.js';
 
 const signup = async (req: Request, res: Response) => {
     let message = '';
@@ -57,10 +58,10 @@ const signup = async (req: Request, res: Response) => {
         };
         res.status(200).json({ userInfo });
     } catch (err) {
-        if (err instanceof MongooseError) {
-            const message = err.message;
-            res.status(500).json({ message });
-        }
+        const message = mongooseError(err)
+        if (!message) return
+        res.status(500).json({ message });
+
     }
 };
 
@@ -93,7 +94,7 @@ const login = async (req: Request, res: Response) => {
             userId: user._id,
             username: user.username
         };
-        const token = createToken({ userInfo });
+        const token = createToken(userInfo);
 
         const userObj = {
             userId: user._id,
@@ -138,7 +139,7 @@ const updateUserInfo = async (req: Request, res: Response) => {
                 userId: updatedUser._id,
                 username: updatedUser.username
             };
-            const token = createToken({ userInfo });
+            const token = createToken(userInfo);
             message = 'username updated successfully';
             res.status(200).json({ message, userInfo, token });
         }
@@ -196,7 +197,7 @@ const userSettings = async (req: Request, res: Response) => {
 
         findUsr.username = username || findUsr.username;
         findUsr.bio = bio || findUsr.bio;
-        await findUsr.save({ new: true });
+        await findUsr.save();
 
         if (
             !newPassword ||
@@ -225,10 +226,10 @@ const userSettings = async (req: Request, res: Response) => {
         };
         res.status(200).json({ message, userInfo });
     } catch (err) {
-        if (err instanceof MongooseError) {
-            message = err.message;
-            res.status(500).json({ message });
-        }
+        const message = mongooseError(err)
+        if (!message) return
+        res.status(500).json({ message });
+
     }
 };
 
@@ -243,7 +244,7 @@ const userStatus = (socket: Socket) => {
 
 const updateOnlineStatus = async (socket: Socket) => {
     try {
-        const userId = socket.userId;
+        const userId = socket.data.userId;
         const status = 'Online';
         if (socket.connected) {
             const findUser = await User.findByIdAndUpdate(
@@ -253,23 +254,23 @@ const updateOnlineStatus = async (socket: Socket) => {
                 },
                 { new: true }
             );
-
+            if (!findUser) return
             socket.broadcast.emit(usrEvents.status, {
                 userId: findUser._id,
                 status: findUser.lastSeen
             });
         }
     } catch (err) {
-        if (err instanceof MongooseError) {
-            const message = err.message;
-            socketError(socket, msgEvents.errMsg, message);
-        }
+        const message = mongooseError(err)
+        if (!message) return
+        socketError(socket, msgEvents.errMsg, message);
+
     }
 };
 
 const updateOfflineStatus = async (socket: Socket) => {
     try {
-        const userId = socket.userId;
+        const userId = socket.data.userId;
         const status = new Date();
         socket.on('disconnecting', async () => {
             const findUser = await User.findByIdAndUpdate(
@@ -306,7 +307,7 @@ const typing = (socket: Socket) => {
 
 const joinRooms = async (socket: Socket) => {
     try {
-        const userId = socket.userId;
+        const userId = socket.data.userId;
         const findChats = await Chat.find({ members: { $in: userId } });
 
         if (findChats && findChats.length > 0) {
@@ -318,10 +319,10 @@ const joinRooms = async (socket: Socket) => {
             });
         }
     } catch (err) {
-        if (err instanceof MongooseError) {
-            const errMsg = err.message;
-            socketError(socket, chatEvents.errMsg, errMsg);
-        }
+        const message = mongooseError(err);
+        if (!message) return
+        socketError(socket, chatEvents.errMsg, message);
+
     }
 };
 

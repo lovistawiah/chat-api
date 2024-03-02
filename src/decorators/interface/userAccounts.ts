@@ -1,4 +1,6 @@
+import { Types } from "mongoose";
+
 export interface IUserInfo {
-    userId: string;
+    userId: Types.ObjectId;
     username: string;
 }
