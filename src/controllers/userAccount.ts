@@ -1,37 +1,36 @@
-import bcrypt from 'bcrypt'
-import User from '../models/Users.js'
-import { usrEvents, chatEvents, msgEvents } from '../utils/index.js'
+import bcrypt from 'bcrypt';
+import User from '../models/Users.js';
+import { usrEvents, chatEvents, msgEvents } from '../utils/index.js';
 import { Socket } from 'socket.io';
-import { getUserNameFromEmail, sanitize } from '../utils/user.js'
-import { createToken } from '../utils/token.js'
-import Chat from '../models/Chat.js'
-import { MongooseError } from 'mongoose'
-import { socketError } from '../ioInstance/socketError.js'
+import { getUserNameFromEmail, sanitize } from '../utils/user.js';
+import { createToken } from '../utils/token.js';
+import Chat from '../models/Chat.js';
+import { MongooseError } from 'mongoose';
+import { socketError } from '../ioInstance/socketError.js';
 import { Request, Response } from 'express';
 
-
 const signup = async (req: Request, res: Response) => {
-    let message = "";
+    let message = '';
     try {
         let { email, password, confirmPassword } = req.body;
         if (!email || !password || !confirmPassword) {
-            message = "all fields are required";
+            message = 'all fields are required';
             res.status(400).json({ message });
             return;
         }
         email = sanitize(email);
         if (password !== confirmPassword) {
-            message = "passwords do not match";
+            message = 'passwords do not match';
             res.status(401).json({ message });
             return;
         }
         const uniqueUserName = await getUserNameFromEmail(email);
         if (!uniqueUserName) {
-            message = "unknown error, try again!";
+            message = 'unknown error, try again!';
             res.status(400).json({ message });
             return;
         }
-        const defaultUrl = "https://robohash.org/" + uniqueUserName;
+        const defaultUrl = 'https://robohash.org/' + uniqueUserName;
         password = await bcrypt.hash(password, 10);
 
         const bio = `hey there, I'm on You and I`;
@@ -40,13 +39,13 @@ const signup = async (req: Request, res: Response) => {
             password,
             username: uniqueUserName,
             avatarUrl: defaultUrl,
-            bio,
+            bio
         };
 
         const user = await User.create(account);
 
         if (!user) {
-            message = "account cannot be created, try again later";
+            message = 'account cannot be created, try again later';
             res.status(401).json({ message });
             return;
         }
@@ -54,10 +53,9 @@ const signup = async (req: Request, res: Response) => {
             userId: user._id,
             username: user.username,
             avatarUrl: user.avatarUrl,
-            bio: user.bio,
+            bio: user.bio
         };
         res.status(200).json({ userInfo });
-
     } catch (err) {
         if (err instanceof MongooseError) {
             const message = err.message;
@@ -66,19 +64,18 @@ const signup = async (req: Request, res: Response) => {
     }
 };
 
-
 const login = async (req: Request, res: Response) => {
-    let message = "";
+    let message = '';
     try {
         let { usernameEmail, password } = req.body;
         if (!usernameEmail || !password) {
-            message = "username, email or password required";
+            message = 'username, email or password required';
             res.status(401).json({ message });
             return;
         }
         usernameEmail = sanitize(usernameEmail);
         const user = await User.findOne({
-            $or: [{ username: usernameEmail }, { email: usernameEmail }],
+            $or: [{ username: usernameEmail }, { email: usernameEmail }]
         });
         if (!user) {
             message = `${usernameEmail} does not exist`;
@@ -88,13 +85,13 @@ const login = async (req: Request, res: Response) => {
 
         const comparePassword = await bcrypt.compare(password, user.password);
         if (!comparePassword) {
-            message = "incorrect password";
+            message = 'incorrect password';
             res.status(401).json({ message });
             return;
         }
         const userInfo = {
             userId: user._id,
-            username: user.username,
+            username: user.username
         };
         const token = createToken({ userInfo });
 
@@ -102,11 +99,10 @@ const login = async (req: Request, res: Response) => {
             userId: user._id,
             username: user.username,
             bio: user.bio,
-            avatarUrl: user.avatarUrl,
+            avatarUrl: user.avatarUrl
         };
 
         res.status(200).json({ token, userInfo: userObj });
-
     } catch (err) {
         if (err instanceof MongooseError) {
             const message = err.message;
@@ -115,36 +111,35 @@ const login = async (req: Request, res: Response) => {
     }
 };
 
-
 const updateUserInfo = async (req: Request, res: Response) => {
     let { userId, username } = req.body;
     username = sanitize(username);
     try {
-        let message = "";
+        let message = '';
         if (!userId) {
-            message = "User not found";
+            message = 'User not found';
             res.status(304).json({ message });
             return;
         }
         if (!username) {
-            message = "username and bio not updated";
+            message = 'username and bio not updated';
             res.status(304).json({ message });
             return;
         }
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             {
-                username,
+                username
             },
             { new: true }
         );
         if (updatedUser) {
             const userInfo = {
                 userId: updatedUser._id,
-                username: updatedUser.username,
+                username: updatedUser.username
             };
             const token = createToken({ userInfo });
-            message = "username updated successfully";
+            message = 'username updated successfully';
             res.status(200).json({ message, userInfo, token });
         }
     } catch (err) {
@@ -155,9 +150,8 @@ const updateUserInfo = async (req: Request, res: Response) => {
     }
 };
 
-
 const userSettings = async (req: Request, res: Response) => {
-    let message = "";
+    let message = '';
     try {
         let {
             userId,
@@ -165,21 +159,21 @@ const userSettings = async (req: Request, res: Response) => {
             confirmPassword,
             currentPassword,
             username,
-            bio,
+            bio
         } = req.body;
         if (!userId) {
-            message = "user details not provided";
+            message = 'user details not provided';
             res.status(401).json({ message });
             return;
         }
         if (!currentPassword) {
-            message = "current password not provided";
+            message = 'current password not provided';
             res.status(401).json({ message });
             return;
         }
         const findUsr = await User.findById(userId);
         if (!findUsr) {
-            message = "user not found";
+            message = 'user not found';
             res.status(401).json({ message });
             return;
         }
@@ -188,14 +182,14 @@ const userSettings = async (req: Request, res: Response) => {
             findUsr.password
         );
         if (!comparePassword) {
-            message = "incorrect password";
+            message = 'incorrect password';
             res.status(401).json({ message });
             return;
         }
         username = sanitize(username);
         const isUsrExist = await User.findOne({ username });
         if (isUsrExist) {
-            message = "username is already taken";
+            message = 'username is already taken';
             res.status(401).json({ message });
             return;
         }
@@ -208,7 +202,7 @@ const userSettings = async (req: Request, res: Response) => {
             !newPassword ||
             (!confirmPassword && newPassword !== confirmPassword)
         ) {
-            message = "passwords do not match";
+            message = 'passwords do not match';
             res.status(401).json({ message });
             return;
         } else if (
@@ -219,18 +213,17 @@ const userSettings = async (req: Request, res: Response) => {
             const hashedPass = await bcrypt.hash(newPassword, 10);
             findUsr.password = hashedPass;
         } else {
-            message = "passwords do not match";
+            message = 'passwords do not match';
             res.status(401).json({ message });
             return;
         }
-        message = "user updated successfully";
+        message = 'user updated successfully';
         const userInfo = {
             Id: findUsr._id,
             username: findUsr.username,
-            bio: findUsr.bio,
+            bio: findUsr.bio
         };
         res.status(200).json({ message, userInfo });
-
     } catch (err) {
         if (err instanceof MongooseError) {
             message = err.message;
@@ -238,7 +231,6 @@ const userSettings = async (req: Request, res: Response) => {
         }
     }
 };
-
 
 const userStatus = (socket: Socket) => {
     socket.on(usrEvents.status, async (userId) => {
@@ -249,23 +241,22 @@ const userStatus = (socket: Socket) => {
     });
 };
 
-
 const updateOnlineStatus = async (socket: Socket) => {
     try {
         const userId = socket.userId;
-        const status = "Online";
+        const status = 'Online';
         if (socket.connected) {
             const findUser = await User.findByIdAndUpdate(
                 userId,
                 {
-                    lastSeen: status,
+                    lastSeen: status
                 },
                 { new: true }
             );
 
             socket.broadcast.emit(usrEvents.status, {
                 userId: findUser._id,
-                status: findUser.lastSeen,
+                status: findUser.lastSeen
             });
         }
     } catch (err) {
@@ -280,18 +271,18 @@ const updateOfflineStatus = async (socket: Socket) => {
     try {
         const userId = socket.userId;
         const status = new Date();
-        socket.on("disconnecting", async () => {
+        socket.on('disconnecting', async () => {
             const findUser = await User.findByIdAndUpdate(
                 userId,
                 {
-                    lastSeen: status,
+                    lastSeen: status
                 },
                 { new: true }
             );
             if (findUser) {
                 socket.broadcast.emit(usrEvents.status, {
                     userId: findUser._id,
-                    status: findUser.lastSeen,
+                    status: findUser.lastSeen
                 });
             }
         });
@@ -303,17 +294,15 @@ const updateOfflineStatus = async (socket: Socket) => {
     }
 };
 
-
 const typing = (socket: Socket) => {
     socket.on(usrEvents.typing, async (data) => {
         const { chatId } = data;
         if (!chatId) return;
         socket
             .to(chatId.toString())
-            .emit(usrEvents.typing, { chatId, typing: "typing..." });
+            .emit(usrEvents.typing, { chatId, typing: 'typing...' });
     });
 };
-
 
 const joinRooms = async (socket: Socket) => {
     try {
@@ -345,5 +334,5 @@ export {
     updateOnlineStatus,
     joinRooms,
     userStatus,
-    userSettings,
+    userSettings
 };

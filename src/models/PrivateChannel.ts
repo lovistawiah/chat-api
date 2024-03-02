@@ -1,19 +1,19 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const privateChatSchema = new mongoose.Schema(
     {
         members: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "user",
+                ref: 'user',
                 required: true,
-                limit: 2,
-            },
+                limit: 2
+            }
         ],
         isBlocked: {
             type: Boolean,
-            default: false,
-        },
+            default: false
+        }
     },
     { timestamps: true }
 );

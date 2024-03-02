@@ -1,32 +1,31 @@
 import { Server, Socket } from 'socket.io';
-import { socketError } from '../ioInstance/socketError.js'
-import Chat from '../models/Chat.js'
-import User from '../models/Users.js'
-import { chatEvents } from '../utils/index.js'
-import { MongooseError, ObjectId, Schema } from 'mongoose'
-
+import { socketError } from '../ioInstance/socketError.js';
+import Chat from '../models/Chat.js';
+import User from '../models/Users.js';
+import { chatEvents } from '../utils/index.js';
+import { MongooseError, ObjectId, Schema } from 'mongoose';
 
 const getChats = (socket: Socket) => {
     socket.on(chatEvents.chatLastMsg, async () => {
-        let msg = "";
+        let msg = '';
         try {
             const userId = socket.userId as string;
             const userChats = await Chat.find({
-                members: { $in: userId },
+                members: { $in: userId }
             })
                 .populate([
                     {
-                        path: "members",
-                        model: "user",
+                        path: 'members',
+                        model: 'user'
                     },
                     {
-                        path: "messages",
-                        model: "message",
-                    },
+                        path: 'messages',
+                        model: 'message'
+                    }
                 ])
-                .select(["username", "messages"]);
+                .select(['username', 'messages']);
             if (userChats.length === 0) {
-                msg = "no chat found";
+                msg = 'no chat found';
                 socket.emit(chatEvents.chatLastMsg, msg);
                 return;
             }
@@ -51,7 +50,7 @@ const getChats = (socket: Socket) => {
                             username: member.username,
                             avatarUrl: member.avatarUrl,
                             lastMessage: lstMsgInfo.message,
-                            lstMsgDate: lstMsgInfo.createdAt,
+                            lstMsgDate: lstMsgInfo.createdAt
                         };
                         socket.emit(chatEvents.chatLastMsg, chatInfo);
                     }
@@ -66,21 +65,20 @@ const getChats = (socket: Socket) => {
     });
 };
 
-
 const contacts = (socket: Socket) => {
     socket.on(chatEvents.contacts, async () => {
         try {
             const userId = socket.userId as string;
 
             const friends = await User.find({
-                _id: { $ne: userId },
+                _id: { $ne: userId }
             })
-                .select(["username", "avatarUrl", "bio", "chats"])
-                .sort("asc");
+                .select(['username', 'avatarUrl', 'bio', 'chats'])
+                .sort('asc');
 
             friends.forEach(async (friend: any) => {
                 const chat = await Chat.findOne({
-                    members: { $all: [friend._id, userId] },
+                    members: { $all: [friend._id, userId] }
                 });
 
                 if (chat) {
@@ -89,7 +87,7 @@ const contacts = (socket: Socket) => {
                         username: friend.username,
                         avatarUrl: friend.avatarUrl,
                         chatId: chat._id,
-                        bio: friend.bio,
+                        bio: friend.bio
                     };
 
                     socket.emit(chatEvents.contacts, oldFriend);
@@ -98,7 +96,7 @@ const contacts = (socket: Socket) => {
                         Id: friend._id,
                         username: friend.username,
                         avatarUrl: friend.avatarUrl,
-                        bio: friend.bio,
+                        bio: friend.bio
                     };
 
                     socket.emit(chatEvents.contacts, newContact);
@@ -113,14 +111,13 @@ const contacts = (socket: Socket) => {
     });
 };
 
-
 async function findChat(chatId: Schema.Types.ObjectId) {
     try {
         const fndChat = await Chat.findById(chatId);
-        if (!fndChat) return
+        if (!fndChat) return;
         return {
             chatId: fndChat._id,
-            members: fndChat.members,
+            members: fndChat.members
         };
     } catch (err) {
         if (err instanceof MongooseError) {
@@ -136,7 +133,7 @@ async function createChat(members: Schema.Types.ObjectId[]) {
         if (fndChat) {
             return {
                 chatId: fndChat._id,
-                chatMems: fndChat.members,
+                chatMems: fndChat.members
             };
         }
 
@@ -149,7 +146,7 @@ async function createChat(members: Schema.Types.ObjectId[]) {
 
         return {
             chatId: createdChat._id,
-            members: createdChat.members,
+            members: createdChat.members
         };
     } catch (err) {
         if (err instanceof MongooseError) {
@@ -159,7 +156,10 @@ async function createChat(members: Schema.Types.ObjectId[]) {
     }
 }
 
-async function addChatIdToUsers(chatId: Schema.Types.ObjectId, memberId: Schema.Types.ObjectId) {
+async function addChatIdToUsers(
+    chatId: Schema.Types.ObjectId,
+    memberId: Schema.Types.ObjectId
+) {
     await User.findByIdAndUpdate(memberId, { $push: { chats: chatId } });
 }
 
@@ -168,19 +168,19 @@ async function modifyMemsInfo(chatId: ObjectId) {
     try {
         const chat = await Chat.findById(chatId)
             .populate({
-                path: "members",
-                model: "user",
+                path: 'members',
+                model: 'user'
             })
-            .select(["username", "avatarUrl"]);
+            .select(['username', 'avatarUrl']);
         if (!chat) {
-            errMsg = "Chat not found";
+            errMsg = 'Chat not found';
             return errMsg;
         }
         return chat.members.map((member) => {
             return {
                 userId: member._id,
                 username: member.username,
-                avatarUrl: member.avatarUrl,
+                avatarUrl: member.avatarUrl
             };
         });
     } catch (err) {
@@ -191,9 +191,12 @@ async function modifyMemsInfo(chatId: ObjectId) {
     }
 }
 
-
-const joinMemsToRoom = async (io: Server, userId: Schema.Types.ObjectId, chatId: Schema.Types.ObjectId) => {
-    const sockets = await io.of("/").fetchSockets();
+const joinMemsToRoom = async (
+    io: Server,
+    userId: Schema.Types.ObjectId,
+    chatId: Schema.Types.ObjectId
+) => {
+    const sockets = await io.of('/').fetchSockets();
     for (const sock of sockets) {
         if (!sock.rooms.has(chatId.toString())) {
             if (sock.userId.toString() === userId.toString()) {
@@ -210,5 +213,5 @@ export {
     createChat,
     joinMemsToRoom,
     modifyMemsInfo,
-    addChatIdToUsers,
+    addChatIdToUsers
 };

@@ -1,25 +1,25 @@
-import Chat from '../models/Chat.js'
+import Chat from '../models/Chat.js';
 import {
     createChat,
     findChat,
     joinMemsToRoom,
-    modifyMemsInfo,
-} from './chat.js'
-import { msgEvents } from '../utils/index.js'
-import { socketError } from '../ioInstance/socketError.js'
-import { Socket, Server } from 'socket.io'
-import mongoose, { MongooseError, Schema } from 'mongoose'
-import Message from '../models/Messages.js'
-import User from '../models/Users.js'
+    modifyMemsInfo
+} from './chat.js';
+import { msgEvents } from '../utils/index.js';
+import { socketError } from '../ioInstance/socketError.js';
+import { Socket, Server } from 'socket.io';
+import mongoose, { MongooseError, Schema } from 'mongoose';
+import Message from '../models/Messages.js';
+import User from '../models/Users.js';
 
 const getMessages = (socket: Socket) => {
     socket.on(msgEvents.msgs, async (chatId) => {
         if (!chatId) return;
         try {
             const chatMsgs = await Chat.findOne({
-                _id: chatId,
+                _id: chatId
             }).populate({
-                path: "messages",
+                path: 'messages'
             });
             if (!chatMsgs) return;
             chatMsgs.messages.forEach((msgInfo) => {
@@ -33,7 +33,7 @@ const getMessages = (socket: Socket) => {
                     sender,
                     createdAt,
                     updatedAt,
-                    chatId: chatMsgs._id,
+                    chatId: chatMsgs._id
                 };
                 socket.emit(msgEvents.msgs, message);
             });
@@ -43,7 +43,6 @@ const getMessages = (socket: Socket) => {
         }
     });
 };
-
 
 const createNewChatAndMessage = (io: Server, socket: Socket) => {
     try {
@@ -56,8 +55,8 @@ const createNewChatAndMessage = (io: Server, socket: Socket) => {
             const mems = [lgUsrId, userId];
             const createdChat = await createChat(mems);
 
-            if (typeof createdChat !== "object" || createdChat === undefined) {
-                const errMsg = createdChat ?? "Chat not created";
+            if (typeof createdChat !== 'object' || createdChat === undefined) {
+                const errMsg = createdChat ?? 'Chat not created';
                 socketError(socket, msgEvents.errMsg, errMsg);
                 return;
             }
@@ -71,7 +70,7 @@ const createNewChatAndMessage = (io: Server, socket: Socket) => {
             const msgCreated = await Message.create({
                 chatId,
                 sender: lgUsrId,
-                message,
+                message
             });
             const msgObj = {
                 Id: msgCreated._id,
@@ -80,12 +79,12 @@ const createNewChatAndMessage = (io: Server, socket: Socket) => {
                 updatedAt: msgCreated.updatedAt,
                 createdAt: msgCreated.createdAt,
                 chatId: msgCreated.chatId,
-                info: msgCreated.info,
+                info: msgCreated.info
             };
 
             const modifiedMems = await modifyMemsInfo(chatId);
 
-            const sockets = await io.of("/").fetchSockets();
+            const sockets = await io.of('/').fetchSockets();
             if (Array.isArray(modifiedMems)) {
                 modifiedMems.forEach((member) => {
                     for (const sock of sockets) {
@@ -96,7 +95,7 @@ const createNewChatAndMessage = (io: Server, socket: Socket) => {
 
                             newChat = {
                                 Id: msgCreated.chatId,
-                                ...newChat,
+                                ...newChat
                             };
                             sock.emit(msgEvents.newChat, { newChat, msgObj });
                         }
@@ -107,13 +106,13 @@ const createNewChatAndMessage = (io: Server, socket: Socket) => {
                     !Array.isArray(modifyMemsInfo) ||
                     modifyMemsInfo === undefined
                 ) {
-                    const errMsg = modifyMemsInfo ?? "Members not found";
+                    const errMsg = modifyMemsInfo ?? 'Members not found';
                     socketError(socket, msgEvents.errMsg, errMsg);
                     return;
                 }
             }
             await Chat.findByIdAndUpdate(chatId, {
-                $push: { messages: msgCreated._id },
+                $push: { messages: msgCreated._id }
             });
         });
     } catch (err) {
@@ -132,8 +131,8 @@ const createMessage = async (io: Server, socket: Socket) => {
         socket.on(msgEvents.sndMsg, async ({ message, chatId }) => {
             if (!message) return;
             const fndChat = await findChat(chatId);
-            if (typeof fndChat !== "object" || fndChat === undefined) {
-                const errMsg = fndChat ?? "Chat not found";
+            if (typeof fndChat !== 'object' || fndChat === undefined) {
+                const errMsg = fndChat ?? 'Chat not found';
                 socketError(socket, msgEvents.errMsg, errMsg);
                 return;
             }
@@ -147,19 +146,18 @@ const createMessage = async (io: Server, socket: Socket) => {
     }
 };
 
-
 const deleteMessage = async (socket: Socket, io: Server) => {
     try {
         socket.on(msgEvents.delMsg, async (data) => {
             const { msgId, chatId } = data;
             const msgUpdated = await Message.findByIdAndUpdate(
                 msgId,
-                { info: "deleted" },
+                { info: 'deleted' },
                 { new: true }
             );
 
             if (!msgUpdated) {
-                msg = "No message found! Operation failed";
+                msg = 'No message found! Operation failed';
                 return;
             }
 
@@ -167,13 +165,13 @@ const deleteMessage = async (socket: Socket, io: Server) => {
                 Id: msgId,
                 info: msgUpdated.info,
                 message:
-                    msgUpdated.info !== "deleted"
+                    msgUpdated.info !== 'deleted'
                         ? msgUpdated.message
-                        : "this message was deleted",
+                        : 'this message was deleted',
                 sender: msgUpdated.sender,
                 createdAt: msgUpdated.createdAt,
                 updatedAt: msgUpdated.updatedAt,
-                chatId,
+                chatId
             };
             if (chatId) {
                 io.to(chatId.toString()).emit(msgEvents.delMsg, message);
@@ -196,7 +194,7 @@ const updateMessage = (socket: Socket, io: Server) => {
             if (!msgId && !message) return;
             const findMsg = await Message.findByIdAndUpdate(
                 msgId,
-                { message, info: "edited" },
+                { message, info: 'edited' },
                 { new: true }
             );
             if (!findMsg) return;
@@ -208,7 +206,7 @@ const updateMessage = (socket: Socket, io: Server) => {
                 sender: findMsg.sender,
                 createdAt: findMsg.createdAt,
                 updatedAt: findMsg.updatedAt,
-                chatId,
+                chatId
             };
             if (chatId) {
                 io.to(chatId.toString()).emit(msgEvents.updateMsg, message);
@@ -228,7 +226,7 @@ const replyMessage = (socket: Socket, io: Server) => {
             const findMsg = await Message.findById(msgId);
 
             if (!findMsg) {
-                message = "original message not found";
+                message = 'original message not found';
                 socketError(socket, msgEvents.errMsg, message);
                 return;
             }
@@ -237,7 +235,7 @@ const replyMessage = (socket: Socket, io: Server) => {
                 chatId,
                 sender: socket.userId,
                 message,
-                reply: findMsg._id,
+                reply: findMsg._id
             });
 
             const repliedMessage = {
@@ -252,8 +250,8 @@ const replyMessage = (socket: Socket, io: Server) => {
                     Id: findMsg._id,
                     message: findMsg.message,
                     sender: findMsg.sender,
-                    info: findMsg.info,
-                },
+                    info: findMsg.info
+                }
             };
             io.to(chatId.toString()).emit(msgEvents.reply, repliedMessage);
         });
@@ -265,13 +263,24 @@ const replyMessage = (socket: Socket, io: Server) => {
     }
 };
 
-
-async function saveMessageAndSend({ socket, chatId, lgUsrId, message, io }: { socket: Socket, chatId: Schema.Types.ObjectId, lgUsrId: Schema.Types.ObjectId, message: string, io: Server }) {
+async function saveMessageAndSend({
+    socket,
+    chatId,
+    lgUsrId,
+    message,
+    io
+}: {
+    socket: Socket;
+    chatId: Schema.Types.ObjectId;
+    lgUsrId: Schema.Types.ObjectId;
+    message: string;
+    io: Server;
+}) {
     try {
         const msgObj = {
             chatId,
             sender: lgUsrId,
-            message,
+            message
         };
         const msgCreated = await Message.create(msgObj);
         const messageObj = {
@@ -281,13 +290,13 @@ async function saveMessageAndSend({ socket, chatId, lgUsrId, message, io }: { so
             createdAt: msgCreated.createdAt,
             updatedAt: msgCreated.updatedAt,
             chatId: msgCreated.chatId,
-            info: msgCreated.info,
+            info: msgCreated.info
         };
         if (chatId) {
             io.to(chatId.toString()).emit(msgEvents.sndMsg, messageObj);
         }
         await Chat.findByIdAndUpdate(chatId, {
-            $push: { messages: msgCreated._id },
+            $push: { messages: msgCreated._id }
         });
     } catch (e) {
         const msg = e.message;
@@ -301,5 +310,5 @@ export {
     deleteMessage,
     updateMessage,
     createNewChatAndMessage,
-    replyMessage,
+    replyMessage
 };

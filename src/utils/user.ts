@@ -1,22 +1,22 @@
-import User from '../models/Users.js'
+import User from '../models/Users.js';
 
 async function getUserNameFromEmail(email: string) {
     let isUnique = false;
-    let message = "";
+    let message = '';
 
-    if (!email || !email.includes("@")) {
-        message = "Email is not accepted";
+    if (!email || !email.includes('@')) {
+        message = 'Email is not accepted';
         return message;
     }
 
-    let username = email.split("@")[0];
+    let username = email.split('@')[0];
     while (!isUnique) {
         const uniqueUserName = await User.findOne({ username });
         if (!uniqueUserName) {
             isUnique = true;
             return username;
         }
-        const splitUniqueId = new Date().getTime().toString().slice(0, 3)
+        const splitUniqueId = new Date().getTime().toString().slice(0, 3);
         username += splitUniqueId;
     }
 }

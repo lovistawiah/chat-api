@@ -1,36 +1,36 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const messageSchema = new mongoose.Schema(
     {
         chatId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "chat",
-            required: true,
+            ref: 'chat',
+            required: true
         },
         sender: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "user",
-            required: true,
+            ref: 'user',
+            required: true
         },
         message: {
             type: String,
-            required: true,
+            required: true
         },
         reaction: {
-            type: String,
+            type: String
         },
         info: {
             type: String,
-            enum: ["created", "edited", "deleted"],
-            default: "created",
+            enum: ['created', 'edited', 'deleted'],
+            default: 'created'
         },
         reply: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "message",
-        },
+            ref: 'message'
+        }
     },
     { timestamps: true }
 );
 
-const Message = mongoose.model("message", messageSchema);
+const Message = mongoose.model('message', messageSchema);
 
 export default Message;

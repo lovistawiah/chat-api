@@ -1,45 +1,45 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const usrSchema = new mongoose.Schema(
     {
         username: {
             type: String,
             unique: true,
-            required: true,
+            required: true
         },
         email: {
             type: String,
             required: true,
-            unique: true,
+            unique: true
         },
         password: {
             type: String,
-            required: true,
+            required: true
         },
         bio: {
-            type: String,
+            type: String
         },
         avatarUrl: {
-            type: String,
+            type: String
         },
         lastSeen: {
-            type: String,
+            type: String
         },
         keys: {
             privKey: String,
-            pubKey: String,
+            pubKey: String
         },
         chats: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "chat",
-            },
-        ],
+                ref: 'chat'
+            }
+        ]
     },
     { timestamps: true }
 );
-usrSchema.index({ chats: 1, "chats.messages": -1 });
+usrSchema.index({ chats: 1, 'chats.messages': -1 });
 
-const User = mongoose.model("user", usrSchema);
+const User = mongoose.model('user', usrSchema);
 
 export default User;

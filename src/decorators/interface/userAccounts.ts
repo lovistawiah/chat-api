@@ -1,4 +1,4 @@
 export interface IUserInfo {
-    userId: string,
-    username: string,
+    userId: string;
+    username: string;
 }

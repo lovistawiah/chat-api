@@ -1,29 +1,29 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const groupChatSchema = new mongoose.Schema(
     {
         chatName: {
             type: String,
-            required: true,
+            required: true
         },
         bio: {
-            type: String,
+            type: String
         },
         avatar: {
-            type: String,
+            type: String
         },
         admins: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "user",
-            },
+                ref: 'user'
+            }
         ],
         members: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "user",
-            },
-        ],
+                ref: 'user'
+            }
+        ]
     },
     { timestamps: true }
 );
