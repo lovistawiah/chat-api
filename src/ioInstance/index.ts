@@ -1,21 +1,21 @@
-const { Server } = require("socket.io");
-const { authenticateSocket } = require("../Middleware/userAuth");
-const { getChats, contacts } = require("../controllers/chat");
-const {
+import { Server } from 'socket.io'
+import { authenticateSocket } from '../Middleware/userAuth.js';
+import { getChats, contacts } from '../controllers/chat.js';
+import {
     createMessage,
     getMessages,
     deleteMessage,
     updateMessage,
     createNewChatAndMessage,
     replyMessage,
-} = require("../controllers/messages");
-const {
+} from '../controllers/messages.js';
+import {
     updateOnlineStatus,
     updateOfflineStatus,
     joinRooms,
     typing,
     userStatus,
-} = require("../controllers/userAccount");
+} from '../controllers/userAccount.js';
 
 const io = new Server({
     cors: {
@@ -38,7 +38,7 @@ io.on("connection", async (socket) => {
 });
 
 io.on("connection", (socket) => {
-    //from controller/messages.js
+    // from controller/messages.js
     createMessage(io, socket);
     createNewChatAndMessage(io, socket);
     getMessages(socket);
@@ -47,9 +47,9 @@ io.on("connection", (socket) => {
     replyMessage(socket, io);
 });
 io.on("connection", async (socket) => {
-    //from controller/chat.js
+    // from controller/chat.js
     getChats(socket);
     contacts(socket);
 });
 
-module.exports = io;
+export default io;

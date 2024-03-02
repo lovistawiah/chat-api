@@ -42,4 +42,4 @@ usrSchema.index({ chats: 1, "chats.messages": -1 });
 
 const User = mongoose.model("user", usrSchema);
 
-module.exports = User;
+export default User;

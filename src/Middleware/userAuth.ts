@@ -1,13 +1,10 @@
-const jwt = require("jsonwebtoken");
-const User = require("../models/Users");
-const { Socket } = require("socket.io");
-const { verifyToken } = require("../utils/token");
-/**
- *
- * @param {Socket} socket
- * @param {*} next
- * @returns
- */
+import jwt from 'jsonwebtoken'
+
+import User from '../models/Users.js';
+import { Socket } from 'socket.io';
+import { verifyToken } from '../utils/token.js'
+
+
 const authenticateSocket = async (socket, next) => {
     let message = "";
     let { token } = socket.handshake.auth;
@@ -42,6 +39,6 @@ const authenticateSocket = async (socket, next) => {
     }
 };
 
-module.exports = {
+export {
     authenticateSocket,
 };

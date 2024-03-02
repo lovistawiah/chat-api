@@ -1,4 +1,5 @@
-const router = require("express").Router();
+import { Router } from "express";
+const router: Router = Router()
 const {
     signup,
     login,
@@ -11,4 +12,4 @@ router.route("/login").post(login);
 router.route("/user-settings").patch(userSettings);
 router.route("/update-user").patch(updateUserInfo);
 
-module.exports = router;
+export default router;
