@@ -21,7 +21,7 @@ const msgEvents = {
     reply: "reply",
 };
 
-module.exports = {
+export {
     usrEvents,
     chatEvents,
     msgEvents,
