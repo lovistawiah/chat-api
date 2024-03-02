@@ -3,13 +3,13 @@ import { socketError } from '../ioInstance/socketError.js';
 import Chat from '../models/Chat.js';
 import User from '../models/Users.js';
 import { chatEvents } from '../utils/index.js';
-import { MongooseError, ObjectId, Schema } from 'mongoose';
+import { MongooseError, ObjectId, Schema, Types } from 'mongoose';
 
 const getChats = (socket: Socket) => {
     socket.on(chatEvents.chatLastMsg, async () => {
         let msg = '';
         try {
-            const userId = socket.userId as string;
+            const userId = socket.data.userId as string;
             const userChats = await Chat.find({
                 members: { $in: userId }
             })
@@ -40,17 +40,17 @@ const getChats = (socket: Socket) => {
             });
             userChats.forEach((chat) => {
                 const { members, messages } = chat;
-                const lstMsgInfo = messages.pop();
+                const lstMsgInfo: any = messages.pop();
 
-                members.forEach((member) => {
+                members.forEach((member: any) => {
                     if (member._id.toString() !== userId) {
                         const chatInfo = {
                             Id: chat._id,
                             userId: member._id,
                             username: member.username,
                             avatarUrl: member.avatarUrl,
-                            lastMessage: lstMsgInfo.message,
-                            lstMsgDate: lstMsgInfo.createdAt
+                            lastMessage: lstMsgInfo?.message,
+                            lstMsgDate: lstMsgInfo?.createdAt
                         };
                         socket.emit(chatEvents.chatLastMsg, chatInfo);
                     }
@@ -68,7 +68,7 @@ const getChats = (socket: Socket) => {
 const contacts = (socket: Socket) => {
     socket.on(chatEvents.contacts, async () => {
         try {
-            const userId = socket.userId as string;
+            const userId = socket.data.userId as string;
 
             const friends = await User.find({
                 _id: { $ne: userId }
@@ -157,8 +157,8 @@ async function createChat(members: Schema.Types.ObjectId[]) {
 }
 
 async function addChatIdToUsers(
-    chatId: Schema.Types.ObjectId,
-    memberId: Schema.Types.ObjectId
+    chatId: Types.ObjectId,
+    memberId: Types.ObjectId
 ) {
     await User.findByIdAndUpdate(memberId, { $push: { chats: chatId } });
 }
@@ -176,11 +176,11 @@ async function modifyMemsInfo(chatId: ObjectId) {
             errMsg = 'Chat not found';
             return errMsg;
         }
-        return chat.members.map((member) => {
+        return chat.members.map((member: any) => {
             return {
                 userId: member._id,
-                username: member.username,
-                avatarUrl: member.avatarUrl
+                username: member?.username,
+                avatarUrl: member?.avatarUrl
             };
         });
     } catch (err) {
@@ -199,7 +199,7 @@ const joinMemsToRoom = async (
     const sockets = await io.of('/').fetchSockets();
     for (const sock of sockets) {
         if (!sock.rooms.has(chatId.toString())) {
-            if (sock.userId.toString() === userId.toString()) {
+            if (sock.data.userId.toString() === userId.toString()) {
                 sock.join(chatId.toString());
             }
         }
