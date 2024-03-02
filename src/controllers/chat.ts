@@ -1,10 +1,9 @@
 import { Server, Socket } from 'socket.io';
-import { socketErroor } from '../ioInstance/socketError.js'
+import { socketError } from '../ioInstance/socketError.js'
 import Chat from '../models/Chat.js'
 import User from '../models/Users.js'
 import { chatEvents } from '../utils/index.js'
-import { MongooseError, ObjectId } from 'mongoose'
-import { SocketReadyState } from 'net';
+import { MongooseError, ObjectId, Schema } from 'mongoose'
 
 
 const getChats = (socket: Socket) => {
@@ -32,12 +31,12 @@ const getChats = (socket: Socket) => {
                 return;
             }
             // sorting and return the chat's last message with the latest date
-            userChats.sort((chatA, chatB) => {
+            userChats.sort((chatA: any, chatB: any) => {
                 const lastMessageA = chatA.messages[chatA.messages.length - 1];
                 const lastMessageB = chatB.messages[chatB.messages.length - 1];
                 return (
-                    new Date(lastMessageB.createdAt) -
-                    new Date(lastMessageA.createdAt)
+                    new Date(lastMessageB.createdAt).getTime() -
+                    new Date(lastMessageA.createdAt).getTime()
                 );
             });
             userChats.forEach((chat) => {
@@ -45,7 +44,7 @@ const getChats = (socket: Socket) => {
                 const lstMsgInfo = messages.pop();
 
                 members.forEach((member) => {
-                    if (member._id.toString() != userId) {
+                    if (member._id.toString() !== userId) {
                         const chatInfo = {
                             Id: chat._id,
                             userId: member._id,
@@ -79,7 +78,7 @@ const contacts = (socket: Socket) => {
                 .select(["username", "avatarUrl", "bio", "chats"])
                 .sort("asc");
 
-            friends.forEach(async (friend) => {
+            friends.forEach(async (friend: any) => {
                 const chat = await Chat.findOne({
                     members: { $all: [friend._id, userId] },
                 });
@@ -115,9 +114,10 @@ const contacts = (socket: Socket) => {
 };
 
 
-async function findChat(chatId: ObjectId) {
+async function findChat(chatId: Schema.Types.ObjectId) {
     try {
         const fndChat = await Chat.findById(chatId);
+        if (!fndChat) return
         return {
             chatId: fndChat._id,
             members: fndChat.members,
@@ -130,7 +130,7 @@ async function findChat(chatId: ObjectId) {
     }
 }
 
-async function createChat(members: ObjectId[]) {
+async function createChat(members: Schema.Types.ObjectId[]) {
     try {
         const fndChat = await Chat.findOne({ members: { $all: members } });
         if (fndChat) {
@@ -143,7 +143,6 @@ async function createChat(members: ObjectId[]) {
         const createdChat = await Chat.create({ members });
         if (createdChat) {
             createdChat.members.forEach((memberId) => {
-                console.log(memberId);
                 addChatIdToUsers(createdChat._id, memberId);
             });
         }
@@ -160,7 +159,7 @@ async function createChat(members: ObjectId[]) {
     }
 }
 
-async function addChatIdToUsers(chatId: ObjectId, memberId: ObjectId) {
+async function addChatIdToUsers(chatId: Schema.Types.ObjectId, memberId: Schema.Types.ObjectId) {
     await User.findByIdAndUpdate(memberId, { $push: { chats: chatId } });
 }
 
@@ -193,14 +192,12 @@ async function modifyMemsInfo(chatId: ObjectId) {
 }
 
 
-const joinMemsToRoom = async (io: Server, userId: ObjectId, chatId: ObjectId) => {
-    userId = userId.toString();
-    chatId = chatId.toString();
+const joinMemsToRoom = async (io: Server, userId: Schema.Types.ObjectId, chatId: Schema.Types.ObjectId) => {
     const sockets = await io.of("/").fetchSockets();
     for (const sock of sockets) {
-        if (!sock.rooms.has(chatId)) {
-            if (sock.userId === userId) {
-                sock.join(chatId);
+        if (!sock.rooms.has(chatId.toString())) {
+            if (sock.userId.toString() === userId.toString()) {
+                sock.join(chatId.toString());
             }
         }
     }

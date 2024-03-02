@@ -1,23 +1,18 @@
-const Chat = require("../models/Chat");
-const Messages = require("../models/Messages");
-const {
+import Chat from '../models/Chat.js'
+import {
     createChat,
     findChat,
     joinMemsToRoom,
     modifyMemsInfo,
-} = require("./chat");
-const { msgEvents } = require("../utils/index");
-const { socketError } = require("../ioInstance/socketError");
-const { Socket, Server } = require("socket.io");
-const { default: mongoose, MongooseError } = require("mongoose");
-const Message = require("../models/Messages");
-const User = require("../models/Users");
+} from './chat.js'
+import { msgEvents } from '../utils/index.js'
+import { socketError } from '../ioInstance/socketError.js'
+import { Socket, Server } from 'socket.io'
+import mongoose, { MongooseError, Schema } from 'mongoose'
+import Message from '../models/Messages.js'
+import User from '../models/Users.js'
 
-/**
- *
- * @param {Socket} socket
- */
-const getMessages = (socket) => {
+const getMessages = (socket: Socket) => {
     socket.on(msgEvents.msgs, async (chatId) => {
         if (!chatId) return;
         try {
@@ -26,6 +21,7 @@ const getMessages = (socket) => {
             }).populate({
                 path: "messages",
             });
+            if (!chatMsgs) return;
             chatMsgs.messages.forEach((msgInfo) => {
                 let { info, message, sender, createdAt, _id, updatedAt } =
                     msgInfo;
@@ -48,12 +44,8 @@ const getMessages = (socket) => {
     });
 };
 
-/**
- *
- * @param {Server} io
- * @param {Socket} socket
- */
-const createNewChatAndMessage = (io, socket) => {
+
+const createNewChatAndMessage = (io: Server, socket: Socket) => {
     try {
         socket.on(msgEvents.newChat, async ({ userId, message }) => {
             if (!message) return;
@@ -76,7 +68,7 @@ const createNewChatAndMessage = (io, socket) => {
                 joinMemsToRoom(io, mem, chatId);
             });
 
-            const msgCreated = await Messages.create({
+            const msgCreated = await Message.create({
                 chatId,
                 sender: lgUsrId,
                 message,
@@ -134,7 +126,7 @@ const createNewChatAndMessage = (io, socket) => {
  * @param {Server} io
  * @param {Socket} socket
  */
-const createMessage = async (io, socket) => {
+const createMessage = async (io: Server, socket: Socket) => {
     try {
         const lgUsrId = socket.userId;
         socket.on(msgEvents.sndMsg, async ({ message, chatId }) => {
@@ -155,12 +147,8 @@ const createMessage = async (io, socket) => {
     }
 };
 
-/**
- *
- * @param {Server} io
- * @param {Socket} socket
- */
-const deleteMessage = async (socket, io) => {
+
+const deleteMessage = async (socket: Socket, io: Server) => {
     try {
         socket.on(msgEvents.delMsg, async (data) => {
             const { msgId, chatId } = data;
@@ -201,7 +189,7 @@ const deleteMessage = async (socket, io) => {
  * @param {Socket} socket
  * @param {Server} io
  */
-const updateMessage = (socket, io) => {
+const updateMessage = (socket: Socket, io: Server) => {
     try {
         socket.on(msgEvents.updateMsg, async (data) => {
             let { msgId, message } = data;
@@ -231,13 +219,9 @@ const updateMessage = (socket, io) => {
         socketError(socket, msgEvents.errMsg, msg);
     }
 };
-/**
- *
- * @param {Socket} socket
- * @param {Server} io
- */
-const replyMessage = (socket, io) => {
-    const message = "";
+
+const replyMessage = (socket: Socket, io: Server) => {
+    let message;
     try {
         socket.on(msgEvents.reply, async ({ msgId, chatId, message }) => {
             if (!msgId || !chatId || !message) return;
@@ -281,24 +265,16 @@ const replyMessage = (socket, io) => {
     }
 };
 
-/**
- *
- * @param {Socket} socket
- * @param {mongoose.Types.ObjectId} chatId
- * @param {mongoose.Types.ObjectId} loggedUserId
- * @param {string} message
- *@param {Server} io
- */
 
-async function saveMessageAndSend({ socket, chatId, lgUsrId, message, io }) {
+async function saveMessageAndSend({ socket, chatId, lgUsrId, message, io }: { socket: Socket, chatId: Schema.Types.ObjectId, lgUsrId: Schema.Types.ObjectId, message: string, io: Server }) {
     try {
         const msgObj = {
             chatId,
             sender: lgUsrId,
             message,
         };
-        const msgCreated = await Messages.create(msgObj);
-        message = {
+        const msgCreated = await Message.create(msgObj);
+        const messageObj = {
             Id: msgCreated._id,
             message: msgCreated.message,
             sender: msgCreated.sender,
@@ -308,7 +284,7 @@ async function saveMessageAndSend({ socket, chatId, lgUsrId, message, io }) {
             info: msgCreated.info,
         };
         if (chatId) {
-            io.to(chatId.toString()).emit(msgEvents.sndMsg, message);
+            io.to(chatId.toString()).emit(msgEvents.sndMsg, messageObj);
         }
         await Chat.findByIdAndUpdate(chatId, {
             $push: { messages: msgCreated._id },
@@ -319,7 +295,7 @@ async function saveMessageAndSend({ socket, chatId, lgUsrId, message, io }) {
     }
 }
 
-module.exports = {
+export {
     getMessages,
     createMessage,
     deleteMessage,
