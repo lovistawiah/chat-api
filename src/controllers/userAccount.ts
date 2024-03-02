@@ -29,7 +29,7 @@ const signup = async (req, res) => {
             res.status(401).json({ message });
             return;
         }
-        let uniqueUserName = await getUserNameFromEmail(email);
+        const uniqueUserName = await getUserNameFromEmail(email);
         if (!uniqueUserName) {
             message = "unknown error, try again!";
             res.status(400).json({ message });
@@ -40,7 +40,7 @@ const signup = async (req, res) => {
 
         const bio = `hey there, I'm on You and I`;
         const account = {
-            email: email,
+            email,
             password,
             username: uniqueUserName,
             avatarUrl: defaultUrl,
@@ -61,7 +61,7 @@ const signup = async (req, res) => {
             bio: user.bio,
         };
         res.status(200).json({ userInfo });
-        return;
+        
     } catch (err) {
         if (err instanceof MongooseError) {
             const message = err.message;
@@ -115,7 +115,7 @@ const login = async (req, res) => {
         };
 
         res.status(200).json({ token, userInfo: userObj });
-        return;
+        
     } catch (err) {
         if (err instanceof MongooseError) {
             const message = err.message;
@@ -217,8 +217,8 @@ const userSettings = async (req, res) => {
             return;
         }
 
-        findUsr.username = username ? username : findUsr.username;
-        findUsr.bio = bio ? bio : findUsr.bio;
+        findUsr.username = username || findUsr.username;
+        findUsr.bio = bio || findUsr.bio;
         await findUsr.save({ new: true });
 
         if (
@@ -247,7 +247,7 @@ const userSettings = async (req, res) => {
             bio: findUsr.bio,
         };
         res.status(200).json({ message, userInfo });
-        return;
+        
     } catch (err) {
         if (err instanceof MongooseError) {
             message = err.message;

@@ -9,7 +9,8 @@
     "start": "node main.ts",
     "dev": "nodemon main.ts",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
-    "lint": "eslint \"src/**/*.{js,ts}\" --quiet --color"
+    "lint": "eslint \"src/**/*.{js,ts}\" --quiet --color",
+    "fix": "eslint \"src/**/*.{js,ts}\" --fix"
   },
   "repository": {
     "type": "git",

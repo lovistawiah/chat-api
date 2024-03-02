@@ -9,11 +9,7 @@ function createToken(userInfo: IUserInfo) {
 }
 
 function verifyToken(token: string): string | Error | JwtPayload {
-    const payload = jwt.verify(token, process.env.JWT_SECRET as string);
-    if (!payload) {
-        const err = new Error("invalid token");
-        return err
-    }
+    const payload = jwt.verify(token, process.env.JWT_SECRET as string)
     return payload
 }
 

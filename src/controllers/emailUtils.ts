@@ -55,15 +55,15 @@ function sendEmailCode(receiver, code) {
     if (!receiver || !verifyMessage || !code) {
         return;
     }
-    let mailTransporter = mailer.createTransport({
+    const mailTransporter = mailer.createTransport({
         service: "gmail",
         auth: {
             user: sender,
-            pass: pass,
+            pass,
         },
     });
 
-    let mailDetails = {
+    const mailDetails = {
         from: sender,
         to: receiver,
         subject: `Verification Code:${code} from You and I`,

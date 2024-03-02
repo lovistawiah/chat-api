@@ -1,11 +1,9 @@
-import jwt from 'jsonwebtoken'
-
 import User from '../models/Users.js';
 import { Socket } from 'socket.io';
 import { verifyToken } from '../utils/token.js'
 
 
-const authenticateSocket = async (socket, next) => {
+const authenticateSocket = async (socket: Socket, next: (arg0: unknown) => void) => {
     let message = "";
     let { token } = socket.handshake.auth;
     if (!token) {
@@ -22,9 +20,11 @@ const authenticateSocket = async (socket, next) => {
             const err = new Error("invalid token");
             next(err);
         }
+        if (typeof payload === "object") {
+            const userId: string = payload.userInfo.userId;
+            const findUser = await User.findById(userId);
 
-        const userId = payload.userInfo.userId;
-        const findUser = await User.findById(userId);
+        }
         if (!findUser) {
             message = "user does not exist";
             const err = new Error(message);

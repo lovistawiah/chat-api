@@ -1,19 +1,17 @@
-const { Socket } = require("socket.io");
-const { socketError } = require("../ioInstance/socketError");
-const Chat = require("../models/Chat");
-const User = require("../models/Users");
-const { chatEvents } = require("../utils");
-const { MongooseError } = require("mongoose");
-/**
- *
- * @param {Socket} socket
- * @returns
- */
-const getChats = (socket) => {
+import { Server, Socket } from 'socket.io';
+import { socketErroor } from '../ioInstance/socketError.js'
+import Chat from '../models/Chat.js'
+import User from '../models/Users.js'
+import { chatEvents } from '../utils/index.js'
+import { MongooseError, ObjectId } from 'mongoose'
+import { SocketReadyState } from 'net';
+
+
+const getChats = (socket: Socket) => {
     socket.on(chatEvents.chatLastMsg, async () => {
         let msg = "";
         try {
-            const userId = socket.userId;
+            const userId = socket.userId as string;
             const userChats = await Chat.find({
                 members: { $in: userId },
             })
@@ -28,7 +26,7 @@ const getChats = (socket) => {
                     },
                 ])
                 .select(["username", "messages"]);
-            if (userChats.length == 0) {
+            if (userChats.length === 0) {
                 msg = "no chat found";
                 socket.emit(chatEvents.chatLastMsg, msg);
                 return;
@@ -69,14 +67,11 @@ const getChats = (socket) => {
     });
 };
 
-/**
- *
- * @param {Socket} socket
- */
-const contacts = (socket) => {
+
+const contacts = (socket: Socket) => {
     socket.on(chatEvents.contacts, async () => {
         try {
-            const userId = socket.userId;
+            const userId = socket.userId as string;
 
             const friends = await User.find({
                 _id: { $ne: userId },
@@ -119,11 +114,8 @@ const contacts = (socket) => {
     });
 };
 
-/**
- * @param {import("mongoose").ObjectId} chatId
- *
- */
-async function findChat(chatId) {
+
+async function findChat(chatId: ObjectId) {
     try {
         const fndChat = await Chat.findById(chatId);
         return {
@@ -138,14 +130,9 @@ async function findChat(chatId) {
     }
 }
 
-/**
- *
- * @param {[import("mongoose").ObjectId]} members
- *
- */
-async function createChat(members) {
+async function createChat(members: ObjectId[]) {
     try {
-        const fndChat = await Chat.findOne({ members: { $all: mems } });
+        const fndChat = await Chat.findOne({ members: { $all: members } });
         if (fndChat) {
             return {
                 chatId: fndChat._id,
@@ -172,20 +159,12 @@ async function createChat(members) {
         }
     }
 }
-/**
- *
- * @param {import("mongoose").ObjectId} chatId
- * @param {import("mongoose").ObjectId} memberId
- */
-async function addChatIdToUsers(chatId, memberId) {
+
+async function addChatIdToUsers(chatId: ObjectId, memberId: ObjectId) {
     await User.findByIdAndUpdate(memberId, { $push: { chats: chatId } });
 }
-/**
- * Add chatId to each member account
- *
- * @param {import("mongoose").ObjectId} chatId
- */
-async function modifyMemsInfo(chatId) {
+
+async function modifyMemsInfo(chatId: ObjectId) {
     let errMsg;
     try {
         const chat = await Chat.findById(chatId)
@@ -213,17 +192,8 @@ async function modifyMemsInfo(chatId) {
     }
 }
 
-/**
- * Retrieve all connected sockets and join members of a chat to the socket room
- *
- * connects to a chatId when socket userId matches a member of chat
- *
- * this makes client members receive new chat and messages instantly
- * @param {Server} io
- * @param {import("mongoose").ObjectId} userId
- * @param {import("mongoose").ObjectId} chatId
- */
-const joinMemsToRoom = async (io, userId, chatId) => {
+
+const joinMemsToRoom = async (io: Server, userId: ObjectId, chatId: ObjectId) => {
     userId = userId.toString();
     chatId = chatId.toString();
     const sockets = await io.of("/").fetchSockets();
@@ -236,7 +206,7 @@ const joinMemsToRoom = async (io, userId, chatId) => {
     }
 };
 
-module.exports = {
+export {
     getChats,
     contacts,
     findChat,

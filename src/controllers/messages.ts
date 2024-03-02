@@ -77,7 +77,7 @@ const createNewChatAndMessage = (io, socket) => {
             });
 
             const msgCreated = await Messages.create({
-                chatId: chatId,
+                chatId,
                 sender: lgUsrId,
                 message,
             });
@@ -237,7 +237,7 @@ const updateMessage = (socket, io) => {
  * @param {Server} io
  */
 const replyMessage = (socket, io) => {
-    let message = "";
+    const message = "";
     try {
         socket.on(msgEvents.reply, async ({ msgId, chatId, message }) => {
             if (!msgId || !chatId || !message) return;
@@ -293,7 +293,7 @@ const replyMessage = (socket, io) => {
 async function saveMessageAndSend({ socket, chatId, lgUsrId, message, io }) {
     try {
         const msgObj = {
-            chatId: chatId,
+            chatId,
             sender: lgUsrId,
             message,
         };
