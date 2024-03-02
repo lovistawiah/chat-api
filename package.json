@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "description": "chat api for you and I",
   "main": "main.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node main.js",
-    "dev": "nodemon main.js"
+    "start": "node main.ts",
+    "dev": "nodemon main.ts",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
+    "lint": "eslint \"src/**/*.{js,ts}\" --quiet --color"
   },
   "repository": {
     "type": "git",
@@ -19,10 +22,9 @@
   },
   "homepage": "https://github.com/lovistawiah/you-and-i#readme",
   "dependencies": {
-    "@google-cloud/storage": "^7.6.0",
     "bcrypt": "^5.1.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.1.3",
+    "dotenv": "^16.4.5",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.2.2",
@@ -31,7 +33,22 @@
     "socket.io": "^4.6.2"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.11.24",
+    "@types/socket.io-file": "^2.0.7",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-semistandard": "^17.0.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^15.7.0",
+    "eslint-plugin-promise": "^6.1.1",
     "morgan": "^1.10.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
 }

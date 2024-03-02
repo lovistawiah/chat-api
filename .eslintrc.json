@@ -1,0 +1,31 @@
+{
+  "extends": [
+    "eslint:recommended",
+    "eslint-config-semistandard",
+    "plugin:import/errors",
+    "prettier"
+  ],
+  "plugins": ["@typescript-eslint"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "ecmaFeatures": {
+      "arrowFunctions": true,
+      "modules": true
+    }
+  },
+  "env": {
+    "node": true,
+    "browser": false,
+    "es6": true
+  },
+  "import/parsers": {
+    "@typescript-eslint/parser": [".ts"]
+  },
+  "import/resolver": {
+    "typescript": {
+      "alwaysTryTypes": true
+    }
+  }
+}
+

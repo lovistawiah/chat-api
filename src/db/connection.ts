@@ -1,5 +1,6 @@
-const mongoose = require("mongoose")
+import mongoose from "mongoose"
 
-module.exports = connect = async (url) => {
+const connection = async (url: string) => {
     return mongoose.connect(url)
 }
+export default connection

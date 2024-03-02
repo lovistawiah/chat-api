@@ -1,17 +1,16 @@
-require("dotenv").config();
-const express = require("express");
-require("dotenv").config();
-const cors = require("cors");
-const http = require("http");
-const morgan = require("morgan");
+import 'dotenv/config'
+import express, { Application, Request, Response } from 'express'
+import cors from 'cors'
+import http from 'http'
+import morgan from 'morgan'
 
 //local files
-const ioInstance = require("./src/ioInstance/index");
-const router = require("./src/routes/routes");
-const connection = require("./src/db/connection");
+import ioInstance from "./src/ioInstance/index.js";
+import router from './src/routes/routes.js';
+import connection from './src/db/connection.js';
 
-const app = express();
-const server = http.createServer(app); // Attach Express app to the HTTP server
+const app: Application = express();
+const server: http.Server = http.createServer(app); // Attach Express app to the HTTP server
 const MONGO_URI = process.env.MONGO_URI;
 
 // use only in dev mode
@@ -26,7 +25,7 @@ app.use("/api", router);
 ioInstance.attach(server);
 
 const PORT = process.env.PORT || 5000;
-async function start(url) {
+async function start(url: ) {
     try {
         await connection(url);
         server.listen(PORT, () => {
