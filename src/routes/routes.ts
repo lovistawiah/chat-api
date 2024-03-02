@@ -1,11 +1,12 @@
 import { Router } from 'express';
-const router: Router = Router();
-const {
+
+import {
     signup,
     login,
     updateUserInfo,
     userSettings
-} = require('../controllers/userAccount');
+} from '../controllers/userAccount.js';
+const router = Router();
 
 router.route('/signup').post(signup);
 router.route('/login').post(login);

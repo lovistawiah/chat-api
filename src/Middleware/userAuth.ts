@@ -1,8 +1,8 @@
 import User from '../models/Users.js';
 import { Socket } from 'socket.io';
-import { JsonWebTokenError } from 'jsonwebtoken';
 import { verifyToken } from '../utils/token.js';
-import { MongooseError, Schema } from 'mongoose';
+import { Schema } from 'mongoose';
+import { mongooseError } from '../error/mongooseError.js';
 
 const authenticateSocket = async (socket: Socket, next: any) => {
     let message = '';
@@ -35,13 +35,8 @@ const authenticateSocket = async (socket: Socket, next: any) => {
         socket.data.userId = userId.toString();
         return next();
     } catch (err) {
-        if (err instanceof MongooseError) {
-            message = err.message
-        }
-        if (err instanceof JsonWebTokenError) {
-            message = err.message
-        }
-
+        const message = mongooseError(err)
+        if (!message) return
         next(new Error(message));
     }
 };
