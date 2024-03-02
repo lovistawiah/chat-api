@@ -3,7 +3,7 @@ import { socketError } from '../ioInstance/socketError.js';
 import Chat from '../models/Chat.js';
 import User from '../models/Users.js';
 import { chatEvents } from '../utils/index.js';
-import { MongooseError, ObjectId, Types } from 'mongoose';
+import { MongooseError, Types } from 'mongoose';
 
 const getChats = (socket: Socket) => {
     socket.on(chatEvents.chatLastMsg, async () => {
@@ -163,7 +163,7 @@ async function addChatIdToUsers(
     await User.findByIdAndUpdate(memberId, { $push: { chats: chatId } });
 }
 
-async function modifyMemsInfo(chatId: ObjectId) {
+async function modifyMemsInfo(chatId: Types.ObjectId) {
     let errMsg;
     try {
         const chat = await Chat.findById(chatId)

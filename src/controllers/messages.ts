@@ -8,9 +8,9 @@ import {
 import { msgEvents } from '../utils/index.js';
 import { socketError } from '../ioInstance/socketError.js';
 import { Socket, Server } from 'socket.io';
-import { MongooseError, Schema } from 'mongoose';
+import { Types } from 'mongoose';
 import Message from '../models/Messages.js';
-import User from '../models/Users.js';
+import { mongooseError } from '../error/mongooseError.js';
 
 const getMessages = (socket: Socket) => {
     socket.on(msgEvents.msgs, async (chatId) => {
@@ -38,7 +38,8 @@ const getMessages = (socket: Socket) => {
                 socket.emit(msgEvents.msgs, message);
             });
         } catch (err) {
-            const msg = err.message;
+            const msg = mongooseError(err)
+            if (!msg) return
             socketError(socket, msgEvents.errMsg, msg);
         }
     });
@@ -63,7 +64,7 @@ const createNewChatAndMessage = (io: Server, socket: Socket) => {
             const chatId = createdChat.chatId;
             const chatMems = createdChat.members;
 
-            chatMems.forEach((mem) => {
+            chatMems?.forEach((mem) => {
                 joinMemsToRoom(io, mem, chatId);
             });
 
@@ -88,14 +89,14 @@ const createNewChatAndMessage = (io: Server, socket: Socket) => {
             if (Array.isArray(modifiedMems)) {
                 modifiedMems.forEach((member) => {
                     for (const sock of sockets) {
-                        if (sock.userId === member.userId.toString()) {
-                            let newChat = modifiedMems.filter(
-                                (mem) => mem.userId.toString() !== sock.userId
+                        if (sock.data.userId === member.userId.toString()) {
+                            const otherUser = modifiedMems.filter(
+                                (mem) => mem.userId.toString() !== sock.data.userId.toString()
                             )[0];
 
-                            newChat = {
+                            const newChat = {
                                 Id: msgCreated.chatId,
-                                ...newChat
+                                ...otherUser
                             };
                             sock.emit(msgEvents.newChat, { newChat, msgObj });
                         }
@@ -103,10 +104,10 @@ const createNewChatAndMessage = (io: Server, socket: Socket) => {
                 });
             } else {
                 if (
-                    !Array.isArray(modifyMemsInfo) ||
-                    modifyMemsInfo === undefined
+                    !Array.isArray(modifiedMems) ||
+                    modifiedMems === undefined || typeof modifiedMems === "string"
                 ) {
-                    const errMsg = modifyMemsInfo ?? 'Members not found';
+                    const errMsg = modifiedMems ?? 'Members not found';
                     socketError(socket, msgEvents.errMsg, errMsg);
                     return;
                 }
@@ -116,7 +117,8 @@ const createNewChatAndMessage = (io: Server, socket: Socket) => {
             });
         });
     } catch (err) {
-        const msg = err.message;
+        const msg = mongooseError(err)
+        if (!msg) return
         socketError(socket, msgEvents.errMsg, msg);
     }
 };
@@ -127,7 +129,7 @@ const createNewChatAndMessage = (io: Server, socket: Socket) => {
  */
 const createMessage = async (io: Server, socket: Socket) => {
     try {
-        const lgUsrId = socket.userId;
+        const lgUsrId = socket.data.userId;
         socket.on(msgEvents.sndMsg, async ({ message, chatId }) => {
             if (!message) return;
             const fndChat = await findChat(chatId);
@@ -141,12 +143,14 @@ const createMessage = async (io: Server, socket: Socket) => {
             saveMessageAndSend({ socket, chatId, lgUsrId, message, io });
         });
     } catch (err) {
-        const msg = err.message;
+        const msg = mongooseError(err)
+        if (!msg) return
         socketError(socket, msgEvents.errMsg, msg);
     }
 };
 
 const deleteMessage = async (socket: Socket, io: Server) => {
+    let msg;
     try {
         socket.on(msgEvents.delMsg, async (data) => {
             const { msgId, chatId } = data;
@@ -178,7 +182,8 @@ const deleteMessage = async (socket: Socket, io: Server) => {
             }
         });
     } catch (err) {
-        const msg = err.message;
+        msg = mongooseError(err)
+        if (!msg) return
         socketError(socket, msgEvents.errMsg, msg);
     }
 };
@@ -213,13 +218,13 @@ const updateMessage = (socket: Socket, io: Server) => {
             }
         });
     } catch (err) {
-        const msg = err.message;
+        const msg = mongooseError(err)
+        if (!msg) return
         socketError(socket, msgEvents.errMsg, msg);
     }
 };
 
 const replyMessage = (socket: Socket, io: Server) => {
-    let message;
     try {
         socket.on(msgEvents.reply, async ({ msgId, chatId, message }) => {
             if (!msgId || !chatId || !message) return;
@@ -233,7 +238,7 @@ const replyMessage = (socket: Socket, io: Server) => {
 
             const msgCreated = await Message.create({
                 chatId,
-                sender: socket.userId,
+                sender: socket.data.userId,
                 message,
                 reply: findMsg._id
             });
@@ -256,10 +261,10 @@ const replyMessage = (socket: Socket, io: Server) => {
             io.to(chatId.toString()).emit(msgEvents.reply, repliedMessage);
         });
     } catch (err) {
-        if (err instanceof MongooseError) {
-            const message = err.message;
-            socketError(socket, msgEvents.errMsg, message);
-        }
+        const msg = mongooseError(err)
+        if (!msg) return
+        socketError(socket, msgEvents.errMsg, msg);
+
     }
 };
 
@@ -271,8 +276,8 @@ async function saveMessageAndSend({
     io
 }: {
     socket: Socket;
-    chatId: Schema.Types.ObjectId;
-    lgUsrId: Schema.Types.ObjectId;
+    chatId: Types.ObjectId;
+    lgUsrId: Types.ObjectId;
     message: string;
     io: Server;
 }) {
@@ -298,8 +303,9 @@ async function saveMessageAndSend({
         await Chat.findByIdAndUpdate(chatId, {
             $push: { messages: msgCreated._id }
         });
-    } catch (e) {
-        const msg = e.message;
+    } catch (err) {
+        const msg = mongooseError(err)
+        if (!msg) return
         socketError(socket, msgEvents.errMsg, msg);
     }
 }
