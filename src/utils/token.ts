@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 import { IUserInfo } from '../decorators/interface/userAccounts.js';
 
 function createToken(userInfo: IUserInfo) {
@@ -8,13 +8,13 @@ function createToken(userInfo: IUserInfo) {
     return token;
 }
 
-function verifyToken(token: string) {
+function verifyToken(token: string): string | Error | JwtPayload {
     const payload = jwt.verify(token, process.env.JWT_SECRET as string);
     if (!payload) {
         const err = new Error("invalid token");
-        return err;
+        return err
     }
-    return payload;
+    return payload
 }
 
-module.exports = { createToken, verifyToken };
+export { createToken, verifyToken };
