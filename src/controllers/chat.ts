@@ -4,41 +4,24 @@ import Chat from '../models/Chat.js';
 import User from '../models/Users.js';
 import { chatEvents } from '../utils/index.js';
 import { MongooseError, Types } from 'mongoose';
+import { findChatByMembers, findChatByUserId, findFriendsByUserId, sortChat } from '../helper/chat.js';
+import { sendToReceiver } from '../helper/socket.js';
 
 const getChats = (socket: Socket) => {
     socket.on(chatEvents.chatLastMsg, async () => {
         let msg = '';
         try {
-            const userId = socket.data.userId as string;
-            const userChats = await Chat.find({
-                members: { $in: userId }
-            })
-                .populate([
-                    {
-                        path: 'members',
-                        model: 'user'
-                    },
-                    {
-                        path: 'messages',
-                        model: 'message'
-                    }
-                ])
-                .select(['username', 'messages']);
+            const userId = socket.data.userId as Types.ObjectId;
+            const userChats = await findChatByUserId(userId)
+
             if (userChats.length === 0) {
                 msg = 'no chat found';
-                socket.emit(chatEvents.chatLastMsg, msg);
+                sendToReceiver(socket, chatEvents.errMsg, msg)
                 return;
             }
-            // sorting and return the chat's last message with the latest date
-            userChats.sort((chatA: any, chatB: any) => {
-                const lastMessageA = chatA.messages[chatA.messages.length - 1];
-                const lastMessageB = chatB.messages[chatB.messages.length - 1];
-                return (
-                    new Date(lastMessageB.createdAt).getTime() -
-                    new Date(lastMessageA.createdAt).getTime()
-                );
-            });
-            userChats.forEach((chat) => {
+
+            const sortedChat = sortChat(userChats)
+            sortedChat.forEach((chat) => {
                 const { members, messages } = chat;
                 const lstMsgInfo: any = messages.pop();
 
@@ -52,7 +35,7 @@ const getChats = (socket: Socket) => {
                             lastMessage: lstMsgInfo?.message,
                             lstMsgDate: lstMsgInfo?.createdAt
                         };
-                        socket.emit(chatEvents.chatLastMsg, chatInfo);
+                        sendToReceiver(socket, chatEvents.chatLastMsg, chatInfo)
                     }
                 });
             });
@@ -68,18 +51,12 @@ const getChats = (socket: Socket) => {
 const contacts = (socket: Socket) => {
     socket.on(chatEvents.contacts, async () => {
         try {
-            const userId = socket.data.userId as string;
-
-            const friends = await User.find({
-                _id: { $ne: userId }
-            })
-                .select(['username', 'avatarUrl', 'bio', 'chats'])
-                .sort('asc');
-
+            const userId = socket.data.userId as Types.ObjectId;
+            const friends = await findFriendsByUserId(userId)
             friends.forEach(async (friend: any) => {
-                const chat = await Chat.findOne({
-                    members: { $all: [friend._id, userId] }
-                });
+
+                const members = [friend._id, userId]
+                const chat = await findChatByMembers(members)
 
                 if (chat) {
                     const oldFriend = {
@@ -90,7 +67,7 @@ const contacts = (socket: Socket) => {
                         bio: friend.bio
                     };
 
-                    socket.emit(chatEvents.contacts, oldFriend);
+                    sendToReceiver(socket, chatEvents.contacts, oldFriend)
                 } else {
                     const newContact = {
                         Id: friend._id,
@@ -98,8 +75,7 @@ const contacts = (socket: Socket) => {
                         avatarUrl: friend.avatarUrl,
                         bio: friend.bio
                     };
-
-                    socket.emit(chatEvents.contacts, newContact);
+                    sendToReceiver(socket, chatEvents.contacts, newContact)
                 }
             });
         } catch (err) {
