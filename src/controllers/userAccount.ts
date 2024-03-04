@@ -9,6 +9,7 @@ import { MongooseError } from 'mongoose';
 import { socketError } from '../ioInstance/socketError.js';
 import { Request, Response } from 'express';
 import { mongooseError } from '../error/mongooseError.js';
+import { createUser } from '../helper/userAccount.js';
 
 const signup = async (req: Request, res: Response) => {
     let message = '';
@@ -43,8 +44,7 @@ const signup = async (req: Request, res: Response) => {
             bio
         };
 
-        const user = await User.create(account);
-
+        const user = await createUser(account)
         if (!user) {
             message = 'account cannot be created, try again later';
             res.status(401).json({ message });
