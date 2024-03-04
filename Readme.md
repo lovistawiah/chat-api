@@ -35,6 +35,21 @@ JWT_SECRET=value
 npm run dev
 ```
 
+## Issue starting dev server
+
+```bash
+npm install nodemon
+```
+
+_or_
+
+```diff
+edit package.json file
+
+- nodemon dist/main.js
++ node dist/main.js
+```
+
 ## Features
 
 - **Real-Time Communication:** Establish instant, bidirectional communication between clients and servers.
@@ -42,7 +57,12 @@ npm run dev
 - **User Authentication:** Authenticate users to ensure secure access to messaging services.
 - **Presence Detection:** Monitor user presence to determine online/offline status.
 - **Message History:** Retrieve message history for seamless conversation continuity.
+- **Secure Socket:** Using jsonweb token as secure handshake protocol.
 
 ## Next Major Features
 
 - **Message Encryption:** Encrypt messages to ensure data privacy and security.
+- **Media Share:** Sharing of media data.
+- **Vide/Audio Call:** Making of video and audio calls at low latency.
+- **Passkeys:** Passkeys as multi factor authentication.
+- **Group chats :** support for more than two users in chat.
