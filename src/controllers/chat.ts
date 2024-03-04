@@ -105,21 +105,8 @@ async function findChat(chatId: Types.ObjectId) {
 
 async function createChat(members: Types.ObjectId[]) {
     try {
-        const fndChat = await Chat.findOne({ members: { $all: members } });
-        if (fndChat) {
-            return {
-                chatId: fndChat._id,
-                chatMems: fndChat.members
-            };
-        }
-
         const createdChat = await Chat.create({ members });
-        if (createdChat) {
-            createdChat.members.forEach((memberId) => {
-                addChatIdToUsers(createdChat._id, memberId);
-            });
-        }
-
+        if (!createdChat) return
         return {
             chatId: createdChat._id,
             members: createdChat.members
@@ -154,7 +141,7 @@ async function modifyMemsInfo(chatId: Types.ObjectId) {
         }
         return chat.members.map((member: any) => {
             return {
-                userId: member._id,
+                Id: member._id,
                 username: member?.username,
                 avatarUrl: member?.avatarUrl
             };

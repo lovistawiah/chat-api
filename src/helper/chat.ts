@@ -41,11 +41,18 @@ const findFriendsByUserId = async (userId: Types.ObjectId) => {
     return friends
 }
 
-const findChatByMembers = async (members: any[]) => {
+const findChatByMembers = async (members: Types.ObjectId[]) => {
     const chat = await Chat.findOne({
         members: { $all: members }
     });
     return chat
 }
 
-export { sortChat, findChatByUserId, findFriendsByUserId, findChatByMembers }
+const pushMsgIdToChat = async (chatId: Types.ObjectId, messageId: Types.ObjectId) => {
+    if (!chatId && !messageId) return
+    await Chat.findByIdAndUpdate(chatId, {
+        $push: { messages: messageId }
+    });
+
+}
+export { sortChat, findChatByUserId, findFriendsByUserId, findChatByMembers, pushMsgIdToChat }
