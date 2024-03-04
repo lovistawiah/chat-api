@@ -6,8 +6,8 @@ import { replaceMongoIdWithId } from "./general.js";
 const getChatMessagesById = async (chatId: Types.ObjectId) => {
     const chat = await Chat.findOne({
         _id: chatId
-    }).populate({
-        path: 'messages'
+    }).lean().populate({
+        path: 'messages',
     });
     if (!chat) return
     return chat.messages
@@ -28,7 +28,7 @@ const updateMessageById = async (messageId: Types.ObjectId, updatesObj: any) => 
         messageId,
         updatesObj,
         { new: true }
-    );
+    ).lean();
     if (!update) return
     const updatedMessage = replaceMongoIdWithId(update)
     return updatedMessage

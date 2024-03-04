@@ -2,12 +2,12 @@ import { Server } from 'socket.io';
 import { authenticateSocket } from '../Middleware/userAuth.js';
 import { getChats, contacts } from '../controllers/chat.js';
 import {
-    createMessage,
-    getMessages,
-    deleteMessage,
-    updateMessage,
-    createNewChatAndMessage,
-    replyMessage
+    onCreateMessage,
+    onDeleteMessage,
+    onGetMessages,
+    onNewChat,
+    onReplyMessage,
+    onUpdateMessage
 } from '../controllers/messages.js';
 import {
     updateOnlineStatus,
@@ -39,12 +39,12 @@ io.on('connection', async (socket) => {
 
 io.on('connection', (socket) => {
     // from controller/messages.js
-    createMessage(io, socket);
-    createNewChatAndMessage(io, socket);
-    getMessages(socket);
-    deleteMessage(socket, io);
-    updateMessage(socket, io);
-    replyMessage(socket, io);
+    onCreateMessage(io, socket);
+    onNewChat(io, socket);
+    onGetMessages(socket);
+    onDeleteMessage(socket, io);
+    onUpdateMessage(socket, io);
+    onReplyMessage(socket, io);
 });
 io.on('connection', async (socket) => {
     // from controller/chat.js

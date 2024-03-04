@@ -3,10 +3,10 @@ import io from "../ioInstance/index.js"
 import { Types } from "mongoose"
 
 const replaceMongoIdWithId = (obj: any) => {
-    obj.Id = obj._id
-    delete obj._id
-    return obj
-
+    const newObj = { ...obj }
+    newObj.Id = obj?._id
+    delete newObj._id;
+    return newObj
 }
 const filterMembers = (members: any[], socket: RemoteSocket<any, any>) => {
     return members.filter(

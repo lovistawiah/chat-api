@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "tsc && node dist/main.js",
-    "dev": "tsc && nodemon dist/main.js",
+    "dev": "nodemon dist/main.js",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
     "lint": "eslint \"src/**/*.{js,ts}\" --quiet --color",
     "fix": "eslint \"src/**/*.{js,ts}\" --fix"

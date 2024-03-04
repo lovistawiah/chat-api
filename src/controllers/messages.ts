@@ -9,14 +9,13 @@ import { msgEvents } from '../utils/index.js';
 import { socketError } from '../ioInstance/socketError.js';
 import { Socket, Server } from 'socket.io';
 import { Types } from 'mongoose';
-import Message from '../models/Messages.js';
 import { mongooseError } from '../error/mongooseError.js';
 import { createMessage, findMessageById, getChatMessagesById, updateMessageById } from '../helper/messages.js';
 import { broadcast, filterMembers, filterSocket, replaceMongoIdWithId } from '../helper/general.js';
 import { sendToReceiver } from '../helper/socket.js';
 import { findChatByMembers, pushMsgIdToChat } from '../helper/chat.js';
 
-const getMessages = (socket: Socket) => {
+const onGetMessages = (socket: Socket) => {
     socket.on(msgEvents.msgs, async (chatId: Types.ObjectId) => {
         if (!chatId) return;
         try {
@@ -25,7 +24,7 @@ const getMessages = (socket: Socket) => {
             messages.forEach((msgInfo) => {
                 const updatedMsgInfo = replaceMongoIdWithId(msgInfo)
                 updatedMsgInfo.chatId = chatId
-                sendToReceiver(socket, msgEvents.msgs, updateMessage)
+                // sendToReceiver(socket, msgEvents.msgs, updatedMsgInfo)
             });
         } catch (err) {
             const msg = mongooseError(err)
@@ -119,7 +118,7 @@ const onNewChat = (io: Server, socket: Socket) => {
 };
 
 
-const onMessage = async (io: Server, socket: Socket) => {
+const onCreateMessage = async (io: Server, socket: Socket) => {
     try {
         const lgUsrId = socket.data.userId as Types.ObjectId;
 
@@ -150,7 +149,7 @@ const onMessage = async (io: Server, socket: Socket) => {
     }
 };
 
-const deleteMessage = async (socket: Socket, io: Server) => {
+const onDeleteMessage = async (socket: Socket, io: Server) => {
     let msg;
     try {
         socket.on(msgEvents.delMsg, async (data: { msgId: Types.ObjectId, chatId: Types.ObjectId }) => {
@@ -190,7 +189,7 @@ const deleteMessage = async (socket: Socket, io: Server) => {
  * @param {Socket} socket
  * @param {Server} io
  */
-const updateMessage = (socket: Socket, io: Server) => {
+const onUpdateMessage = (socket: Socket, io: Server) => {
     try {
         socket.on(msgEvents.updateMsg, async (data) => {
             const { msgId, message } = data;
@@ -212,7 +211,7 @@ const updateMessage = (socket: Socket, io: Server) => {
     }
 };
 
-const replyMessage = (socket: Socket, io: Server) => {
+const onReplyMessage = (socket: Socket, io: Server) => {
     try {
         socket.on(msgEvents.reply, async ({ msgId, chatId, message }: { msgId: Types.ObjectId, chatId: Types.ObjectId, message: string }) => {
             if (!msgId || !chatId || !message) return;
@@ -258,10 +257,10 @@ const replyMessage = (socket: Socket, io: Server) => {
 };
 
 export {
-    getMessages,
-    createMessage,
-    deleteMessage,
-    updateMessage,
-    createNewChatAndMessage,
-    replyMessage
+    onGetMessages,
+    onCreateMessage,
+    onDeleteMessage,
+    onUpdateMessage,
+    onNewChat,
+    onReplyMessage
 };
