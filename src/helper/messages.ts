@@ -2,6 +2,8 @@ import { Types } from "mongoose";
 import Chat from "../models/Chat.js";
 import Message from "../models/Messages.js";
 import { replaceMongoIdWithId } from "./general.js";
+import { IMessage } from "../decorators/messages.js";
+
 
 const getChatMessagesById = async (chatId: Types.ObjectId) => {
     const chat = await Chat.findOne({
@@ -13,7 +15,7 @@ const getChatMessagesById = async (chatId: Types.ObjectId) => {
     return chat.messages
 }
 
-const createMessage = async (messageObj: any) => {
+const createMessage = async (messageObj: IMessage) => {
     const messageCreated = await Message.create(messageObj)
     if (!messageCreated) return
     const updatedObj = replaceMongoIdWithId(messageCreated)

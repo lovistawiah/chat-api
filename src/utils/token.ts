@@ -1,5 +1,5 @@
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import { IUserInfo } from '../decorators/interface/userAccounts.js';
+import { IUserInfo } from '../decorators/userAccounts.js';
 
 function createToken(userInfo: IUserInfo) {
     const token = jwt.sign(userInfo, process.env.JWT_SECRET as string, {

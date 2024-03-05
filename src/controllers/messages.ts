@@ -8,12 +8,13 @@ import {
 import { msgEvents } from '../utils/index.js';
 import { socketError } from '../ioInstance/socketError.js';
 import { Socket, Server } from 'socket.io';
-import { Types } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { mongooseError } from '../error/mongooseError.js';
 import { createMessage, findMessageById, getChatMessagesById, updateMessageById } from '../helper/messages.js';
 import { broadcast, filterMembers, filterSocket, replaceMongoIdWithId } from '../helper/general.js';
 import { sendToReceiver } from '../helper/socket.js';
 import { findChatByMembers, pushMsgIdToChat } from '../helper/chat.js';
+import { IMessage } from '../decorators/messages.js';
 
 const onGetMessages = (socket: Socket) => {
     socket.on(msgEvents.msgs, async (chatId: Types.ObjectId) => {
@@ -21,7 +22,7 @@ const onGetMessages = (socket: Socket) => {
         try {
             const messages = await getChatMessagesById(chatId)
             if (!messages) return;
-            messages.forEach((msgInfo) => {
+            messages.forEach((msgInfo: Document<IMessage>) => {
                 const updatedMsgInfo = replaceMongoIdWithId(msgInfo)
                 updatedMsgInfo.chatId = chatId
                 // sendToReceiver(socket, msgEvents.msgs, updatedMsgInfo)
@@ -66,12 +67,14 @@ const onNewChat = (io: Server, socket: Socket) => {
                 if (!chatId) return
                 joinMemsToRoom(io, mem, chatId);
             });
-            const msgObj = {
+            const msgObj: IMessage = {
                 chatId,
                 sender: lgUsrId,
-                message
+                message,
+                info: 'created'
             }
             const msgCreated = await createMessage(msgObj)
+            if (!msgCreated) return
             const modifiedMems = await modifyMemsInfo(chatId);
 
 
@@ -132,15 +135,16 @@ const onCreateMessage = async (io: Server, socket: Socket) => {
                 return;
             }
 
-            const msgObj = {
+            const msgObj: IMessage = {
                 chatId,
                 sender: lgUsrId,
-                message
+                message,
+                info: 'created'
             };
 
             const msgCreated = await createMessage(msgObj)
             broadcast(io, chatId, msgEvents.sndMsg, msgCreated)
-            pushMsgIdToChat(chatId, msgCreated.Id)
+            pushMsgIdToChat(chatId, msgCreated.)
         });
     } catch (err) {
         const msg = mongooseError(err)

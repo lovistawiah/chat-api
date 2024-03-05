@@ -1,9 +1,10 @@
-import { Types } from "mongoose";
+import { Document, Types } from "mongoose";
 import Chat from "../models/Chat.js";
 import User from "../models/Users.js";
+import { IChat } from "../decorators/chats.js";
 
-const sortChat = (arr: Array<any>) => {
-    arr.sort((chatA: any, chatB: any) => {
+const sortChat = (arr: Array<IChat>) => {
+    arr.sort((chatA, chatB) => {
         const lastMessageA = chatA.messages[chatA.messages.length - 1];
         const lastMessageB = chatB.messages[chatB.messages.length - 1];
         return (

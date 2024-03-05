@@ -1,13 +1,16 @@
 import { RemoteSocket, Server } from "socket.io"
 import io from "../ioInstance/index.js"
-import { Types } from "mongoose"
+import { Document, Types } from "mongoose"
+import { IMessage } from "../decorators/messages.js"
 
-const replaceMongoIdWithId = (obj: any) => {
+
+const replaceMongoIdWithId = (obj: IMessage) => {
     const newObj = { ...obj }
-    newObj.Id = obj?._id
+    newObj.id = obj?._id
     delete newObj._id;
     return newObj
 }
+
 const filterMembers = (members: any[], socket: RemoteSocket<any, any>) => {
     return members.filter(
         (mem) => mem.userId.toString() !== socket.data.userId.toString()
