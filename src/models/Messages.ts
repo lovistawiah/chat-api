@@ -10,15 +10,10 @@ export interface IMessage {
     updatedAt: number
 }
 export interface IMessageExt extends IMessage {
-    reply?: IMessage["_id"]
+    reply?: IMessage
 }
 
-interface IMessageExtDoc extends IMessageExt {
-    reply?: IMessage["_id"]
-
-}
-
-const messageSchema = new Schema<IMessageExtDoc>(
+const messageSchema = new Schema<IMessageExt>(
     {
         chatId: {
             type: mongoose.Schema.Types.ObjectId,
@@ -50,6 +45,6 @@ const messageSchema = new Schema<IMessageExtDoc>(
     { timestamps: true }
 );
 
-const Message = model<IMessageExtDoc>('message', messageSchema);
+const Message = model<IMessageExt>('message', messageSchema);
 
 export default Message;
