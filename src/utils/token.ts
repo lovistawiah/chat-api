@@ -1,5 +1,9 @@
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import { IUserInfo } from '../decorators/userAccounts.js';
+import { Types } from 'mongoose';
+interface IUserInfo {
+    userId: Types.ObjectId,
+    username: string
+}
 
 function createToken(userInfo: IUserInfo) {
     const token = jwt.sign(userInfo, process.env.JWT_SECRET as string, {
