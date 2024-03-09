@@ -1,13 +1,13 @@
 import mongoose, { Schema, Types, model } from 'mongoose';
 export interface IMessage {
-    _id?: Types.ObjectId
+    _id: Types.ObjectId
     chatId: Types.ObjectId,
     sender: Types.ObjectId,
     message: string,
     reaction?: string,
     info: 'created' | 'edited' | 'deleted',
-    createdAt?: number,
-    updatedAt?: number
+    createdAt: number,
+    updatedAt: number
 }
 export interface IMessageExt extends IMessage {
     reply?: IMessage
