@@ -1,7 +1,24 @@
-import mongoose, { Schema, model } from 'mongoose';
+import mongoose, { Schema, Types, model } from 'mongoose';
+export interface IMessage {
+    _id: Types.ObjectId
+    chatId: Types.ObjectId,
+    sender: Types.ObjectId,
+    message: string,
+    reaction: string,
+    info: 'created' | 'edited' | 'deleted',
+    createdAt: number,
+    updatedAt: number
+}
+export interface IMessageExt extends IMessage {
+    reply?: IMessage["_id"]
+}
 
+interface IMessageExtDoc extends IMessageExt {
+    reply?: IMessage["_id"]
 
-const messageSchema = new Schema(
+}
+
+const messageSchema = new Schema<IMessageExtDoc>(
     {
         chatId: {
             type: mongoose.Schema.Types.ObjectId,
@@ -33,6 +50,6 @@ const messageSchema = new Schema(
     { timestamps: true }
 );
 
-const Message = model('message', messageSchema);
+const Message = model<IMessageExtDoc>('message', messageSchema);
 
 export default Message;

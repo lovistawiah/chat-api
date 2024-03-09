@@ -1,6 +1,21 @@
-import mongoose, { Schema, model } from 'mongoose';
+import { Schema, Types, model, } from 'mongoose';
+import { IUser, } from './Users.js';
+import { IMessageExt } from './Messages.js';
 
-const chatSchema = new Schema(
+export interface IChat {
+    _id: Types.ObjectId,
+    chatType: 'private' | 'group',
+    avatar: string,
+    isBlocked: boolean
+    members: Types.Array<IUser>,
+    messages: Types.Array<IMessageExt>,
+    createdAt: number,
+    updatedAt: number
+}
+
+
+
+const chatSchema = new Schema<IChat>(
     {
         chatType: {
             type: String,
@@ -10,7 +25,7 @@ const chatSchema = new Schema(
         },
         members: [
             {
-                type: mongoose.Schema.Types.ObjectId,
+                type: Schema.Types.ObjectId,
                 required: true,
                 ref: 'user'
             }
@@ -24,13 +39,15 @@ const chatSchema = new Schema(
         },
         messages: [
             {
-                type: mongoose.Schema.Types.ObjectId,
+                type: Schema.Types.ObjectId,
                 ref: 'message'
             }
         ]
     },
     { timestamps: true }
 );
-const Chat = model('chat', chatSchema);
+
+
+const Chat = model<IChat>('chat', chatSchema);
 
 export default Chat;
