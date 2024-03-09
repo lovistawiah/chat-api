@@ -1,8 +1,7 @@
-import { Types } from "mongoose";
+import { Document, Types } from "mongoose";
 import Chat from "../models/Chat.js";
-import Message from "../models/Messages.js";
+import Message, { IMessageExt } from "../models/Messages.js";
 import { replaceMongoIdWithId } from "./general.js";
-import { IMessage } from "../decorators/messages.js";
 
 
 const getChatMessagesById = async (chatId: Types.ObjectId) => {
@@ -15,10 +14,12 @@ const getChatMessagesById = async (chatId: Types.ObjectId) => {
     return chat.messages
 }
 
-const createMessage = async (messageObj: IMessage) => {
+const createMessage = async (messageObj: IMessageExt) => {
     const messageCreated = await Message.create(messageObj)
     if (!messageCreated) return
-    const updatedObj = replaceMongoIdWithId(messageCreated)
+    const updatedObj: Document<unknown, {}, IMessageExt> & IMessageExt & Required<{
+        _id: Types.ObjectId;
+    }> = replaceMongoIdWithId(messageCreated)
     return updatedObj
 }
 

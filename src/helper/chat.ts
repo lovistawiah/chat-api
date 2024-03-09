@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import Chat, { IChat, } from "../models/Chat.js";
 import User from "../models/Users.js";
 
-const sortChat = (arr: Types.Array<IChat>) => {
+const sortChat = (arr: Array<IChat>) => {
     arr.sort((chatA, chatB) => {
         const lastMessageA = chatA.messages[chatA.messages.length - 1];
         const lastMessageB = chatB.messages[chatB.messages.length - 1];
@@ -45,7 +45,10 @@ const findChatByMembers = async (members: Types.ObjectId[]) => {
     const chat = await Chat.findOne({
         members: { $all: members }
     });
-    return chat
+    if (chat) {
+        return chat
+
+    }
 }
 
 const pushMsgIdToChat = async (chatId: Types.ObjectId, messageId: Types.ObjectId) => {

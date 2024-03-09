@@ -1,10 +1,10 @@
 import { RemoteSocket, Server } from "socket.io"
 import io from "../ioInstance/index.js"
-import { Document, Types } from "mongoose"
-import { IMessage } from "../decorators/messages.js"
+import { Types } from "mongoose"
 
 
-const replaceMongoIdWithId = (obj: IMessage) => {
+
+const replaceMongoIdWithId = (obj: any) => {
     const newObj = { ...obj }
     newObj.id = obj?._id
     delete newObj._id;

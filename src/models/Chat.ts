@@ -7,11 +7,16 @@ export interface IChat {
     chatType: 'private' | 'group',
     avatar: string,
     isBlocked: boolean
-    members: Types.Array<IUser>,
+    members: Types.Array<Types.ObjectId>,
     messages: Types.Array<IMessageExt>,
     createdAt: number,
     updatedAt: number
 }
+interface PopulatedMember {
+    members: Types.Array<IUser>
+}
+
+export type PopulatedChatMembers = PopulatedMember & IChat;
 
 
 

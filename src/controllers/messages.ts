@@ -1,4 +1,4 @@
-import Chat from '../models/Chat.js';
+import Chat, { IChat } from '../models/Chat.js';
 import {
     createChat,
     findChat,
@@ -8,13 +8,13 @@ import {
 import { msgEvents } from '../utils/index.js';
 import { socketError } from '../ioInstance/socketError.js';
 import { Socket, Server } from 'socket.io';
-import { Document, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { mongooseError } from '../error/mongooseError.js';
 import { createMessage, findMessageById, getChatMessagesById, updateMessageById } from '../helper/messages.js';
 import { broadcast, filterMembers, filterSocket, replaceMongoIdWithId } from '../helper/general.js';
 import { sendToReceiver } from '../helper/socket.js';
 import { findChatByMembers, pushMsgIdToChat } from '../helper/chat.js';
-import { IMessage } from '../decorators/messages.js';
+import { IMessage } from '../models/Messages.js';
 
 const onGetMessages = (socket: Socket) => {
     socket.on(msgEvents.msgs, async (chatId: Types.ObjectId) => {
@@ -22,8 +22,8 @@ const onGetMessages = (socket: Socket) => {
         try {
             const messages = await getChatMessagesById(chatId)
             if (!messages) return;
-            messages.forEach((msgInfo: Document<IMessage>) => {
-                const updatedMsgInfo = replaceMongoIdWithId(msgInfo)
+            messages.forEach((msgInfo) => {
+                const updatedMsgInfo: IMessage = replaceMongoIdWithId(msgInfo)
                 updatedMsgInfo.chatId = chatId
                 // sendToReceiver(socket, msgEvents.msgs, updatedMsgInfo)
             });
@@ -37,7 +37,7 @@ const onGetMessages = (socket: Socket) => {
 
 const onNewChat = (io: Server, socket: Socket) => {
     let chatId: Types.ObjectId | undefined
-    let chatMembers: Types.ObjectId[] | undefined
+    let chatMembers: Types.Array<Types.ObjectId> | undefined
     try {
         socket.on(msgEvents.newChat, async ({ userId, message }: { userId: Types.ObjectId, message: string | undefined }) => {
             if (!message) return;
@@ -49,16 +49,16 @@ const onNewChat = (io: Server, socket: Socket) => {
             const findChat = await findChatByMembers(members)
 
             if (findChat) {
-                chatId = findChat._id
+                chatId = findChat.id
                 chatMembers = findChat.members
             } else {
-
                 const createdChat = await createChat(members);
                 if (typeof createdChat !== 'object' || typeof createdChat === 'string') {
                     const errMsg = createdChat ?? "Internal Server Error"
                     socketError(socket, msgEvents.errMsg, errMsg)
                     return
                 }
+
                 chatId = createdChat.chatId
                 chatMembers = createdChat.members
             }
@@ -67,6 +67,7 @@ const onNewChat = (io: Server, socket: Socket) => {
                 if (!chatId) return
                 joinMemsToRoom(io, mem, chatId);
             });
+            if (!chatId || !chatMembers) return
             const msgObj: IMessage = {
                 chatId,
                 sender: lgUsrId,
@@ -144,7 +145,7 @@ const onCreateMessage = async (io: Server, socket: Socket) => {
 
             const msgCreated = await createMessage(msgObj)
             broadcast(io, chatId, msgEvents.sndMsg, msgCreated)
-            pushMsgIdToChat(chatId, msgCreated.)
+            pushMsgIdToChat(chatId, msgCreated?.id)
         });
     } catch (err) {
         const msg = mongooseError(err)

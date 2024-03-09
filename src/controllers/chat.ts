@@ -3,7 +3,7 @@ import { socketError } from '../ioInstance/socketError.js';
 import Chat from '../models/Chat.js';
 import User from '../models/Users.js';
 import { chatEvents } from '../utils/index.js';
-import { MongooseError, Types } from 'mongoose';
+import { MongooseError, Types, } from 'mongoose';
 import { findChatByMembers, findChatByUserId, findFriendsByUserId, sortChat } from '../helper/chat.js';
 import { sendToReceiver } from '../helper/socket.js';
 
@@ -23,7 +23,7 @@ const getChats = (socket: Socket) => {
             const sortedChat = sortChat(userChats)
             sortedChat.forEach((chat) => {
                 const { members, messages } = chat;
-                const lstMsgInfo: any = messages.pop();
+                const lstMsgInfo = messages.pop();
 
                 members.forEach((member: any) => {
                     if (member._id.toString() !== userId) {
@@ -53,7 +53,7 @@ const contacts = (socket: Socket) => {
         try {
             const userId = socket.data.userId as Types.ObjectId;
             const friends = await findFriendsByUserId(userId)
-            friends.forEach(async (friend: any) => {
+            friends.forEach(async (friend) => {
 
                 const members = [friend._id, userId]
                 const chat = await findChatByMembers(members)
