@@ -12,15 +12,12 @@ export interface IUser {
         privKey: string,
         pubKey: string
     },
-    chats: Types.ObjectId[]
+    chats: Types.Array<IChat>
     createdAt: number,
     updatedAt: number
 }
 
-interface IUserDoc extends IUser {
-    chats: Types.DocumentArray<IChat["_id"]>
-}
-const usrSchema = new Schema<IUserDoc>(
+const usrSchema = new Schema<IUser>(
     {
         username: {
             type: String,
@@ -60,7 +57,7 @@ const usrSchema = new Schema<IUserDoc>(
 );
 usrSchema.index({ chats: 1, 'chats.messages': -1 });
 
-const User = mongoose.model<IUserDoc>('user', usrSchema);
+const User = mongoose.model<IUser>('user', usrSchema);
 
 export default User;
 
