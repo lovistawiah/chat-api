@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { socketError } from '../ioInstance/socketError.js';
-import Chat from '../models/Chat.js';
+import Chat, { PopulatedChatMembers } from '../models/Chat.js';
 import User from '../models/Users.js';
 import { chatEvents } from '../utils/index.js';
 import { MongooseError, Types, } from 'mongoose';
@@ -22,18 +22,24 @@ const getChats = (socket: Socket) => {
 
             const sortedChat = sortChat(userChats)
             sortedChat.forEach((chat) => {
-                const { members, messages } = chat;
+                const { members, messages } = chat as PopulatedChatMembers;
                 const lstMsgInfo = messages.pop();
 
-                members.forEach((member: any) => {
-                    if (member._id.toString() !== userId) {
+                members.forEach((member) => {
+                    if (member._id.toString() !== userId.toString()) {
                         const chatInfo = {
-                            Id: chat._id,
+                            id: chat._id,
                             userId: member._id,
                             username: member.username,
                             avatarUrl: member.avatarUrl,
                             lastMessage: lstMsgInfo?.message,
-                            lstMsgDate: lstMsgInfo?.createdAt
+                            lstMsgDate: lstMsgInfo?.createdAt,
+                            repply: {
+                                id: lstMsgInfo?.reply?._id,
+                                message: lstMsgInfo?.reply?.message,
+                                sender: lstMsgInfo?.reply?.sender,
+                                updated: lstMsgInfo?.reply?.updatedAt
+                            }
                         };
                         sendToReceiver(socket, chatEvents.chatLastMsg, chatInfo)
                     }
