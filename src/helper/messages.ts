@@ -1,6 +1,6 @@
 import { Document, Types } from "mongoose";
 import Chat from "../models/Chat.js";
-import Message, { IMessageExt } from "../models/Messages.js";
+import Message, { ICreateMessage, IMessageExt } from "../models/Messages.js";
 import { replaceMongoIdWithId } from "./general.js";
 
 
@@ -14,7 +14,7 @@ const getChatMessagesById = async (chatId: Types.ObjectId) => {
     return chat.messages
 }
 
-const createMessage = async (messageObj: IMessageExt) => {
+const createMessage = async (messageObj: ICreateMessage) => {
     const messageCreated = await Message.create(messageObj)
     if (!messageCreated) return
     const updatedObj: Document<unknown, {}, IMessageExt> & IMessageExt & Required<{

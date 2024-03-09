@@ -7,8 +7,8 @@ const sortChat = (arr: Array<IChat>) => {
         const lastMessageA = chatA.messages[chatA.messages.length - 1];
         const lastMessageB = chatB.messages[chatB.messages.length - 1];
         return (
-            new Date(lastMessageB.createdAt).getTime() -
-            new Date(lastMessageA.createdAt).getTime()
+            new Date(lastMessageB?.createdAt).getTime() -
+            new Date(lastMessageA?.createdAt).getTime()
         );
     });
     return arr

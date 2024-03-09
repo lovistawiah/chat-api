@@ -1,4 +1,4 @@
-import Chat, { IChat } from '../models/Chat.js';
+import Chat from '../models/Chat.js';
 import {
     createChat,
     findChat,
@@ -14,7 +14,7 @@ import { createMessage, findMessageById, getChatMessagesById, updateMessageById 
 import { broadcast, filterMembers, filterSocket, replaceMongoIdWithId } from '../helper/general.js';
 import { sendToReceiver } from '../helper/socket.js';
 import { findChatByMembers, pushMsgIdToChat } from '../helper/chat.js';
-import { IMessage } from '../models/Messages.js';
+import { ICreateMessage, IMessage } from '../models/Messages.js';
 
 const onGetMessages = (socket: Socket) => {
     socket.on(msgEvents.msgs, async (chatId: Types.ObjectId) => {
@@ -68,11 +68,10 @@ const onNewChat = (io: Server, socket: Socket) => {
                 joinMemsToRoom(io, mem, chatId);
             });
             if (!chatId || !chatMembers) return
-            const msgObj: IMessage = {
+            const msgObj: ICreateMessage = {
                 chatId,
                 sender: lgUsrId,
                 message,
-                info: 'created'
             }
             const msgCreated = await createMessage(msgObj)
             if (!msgCreated) return
@@ -136,11 +135,10 @@ const onCreateMessage = async (io: Server, socket: Socket) => {
                 return;
             }
 
-            const msgObj: IMessage = {
+            const msgObj: ICreateMessage = {
                 chatId,
                 sender: lgUsrId,
                 message,
-                info: 'created'
             };
 
             const msgCreated = await createMessage(msgObj)
@@ -237,15 +235,15 @@ const onReplyMessage = (socket: Socket, io: Server) => {
 
             const msgCreated = await createMessage(msgObj)
             const repliedMessage = {
-                Id: msgCreated.Id,
-                message: msgCreated.message,
-                sender: msgCreated.sender,
-                createdAt: msgCreated.createdAt,
-                updatedAt: msgCreated.updatedAt,
-                chatId: msgCreated.chatId,
-                info: msgCreated.info,
+                id: msgCreated?.id,
+                message: msgCreated?.message,
+                sender: msgCreated?.sender,
+                createdAt: msgCreated?.createdAt,
+                updatedAt: msgCreated?.updatedAt,
+                chatId: msgCreated?.chatId,
+                info: msgCreated?.info,
                 reply: {
-                    Id: foundMsg._id,
+                    id: foundMsg.id,
                     message: foundMsg.message,
                     sender: foundMsg.sender,
                     info: foundMsg.info

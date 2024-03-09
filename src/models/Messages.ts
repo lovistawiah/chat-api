@@ -9,6 +9,12 @@ export interface IMessage {
     createdAt: number,
     updatedAt: number
 }
+export interface ICreateMessage {
+    chatId: Types.ObjectId,
+    message: string,
+    reply?: Types.ObjectId,
+    sender: Types.ObjectId
+}
 export interface IMessageExt extends IMessage {
     reply?: IMessage
 }
