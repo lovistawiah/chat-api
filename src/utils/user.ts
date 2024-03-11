@@ -21,7 +21,13 @@ async function getUserNameFromEmail(email: string) {
     }
 }
 
+async function emailExist(email: string): Promise<boolean> {
+    const foundEmail = await User.findOne({ email })
+    if (foundEmail) return true
+    return false
+}
+
 function sanitize(string: string) {
     return string.toLowerCase().trim();
 }
-export { getUserNameFromEmail, sanitize };
+export { getUserNameFromEmail, sanitize, emailExist };
