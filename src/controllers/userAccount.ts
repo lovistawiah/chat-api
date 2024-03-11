@@ -60,7 +60,7 @@ const signup = async (req: Request, res: Response) => {
             return;
         }
         const userInfo = {
-            userId: user._id,
+            id: user.id,
             username: user.username,
             avatarUrl: user.avatarUrl,
             bio: user.bio
@@ -100,13 +100,13 @@ const login = async (req: Request, res: Response) => {
             return;
         }
         const userInfo = {
-            userId: user._id,
+            id: user._id,
             username: user.username
         };
         const token = createToken(userInfo);
 
         const userObj = {
-            userId: user._id,
+            id: user.id,
             username: user.username,
             bio: user.bio,
             avatarUrl: user.avatarUrl
@@ -122,11 +122,11 @@ const login = async (req: Request, res: Response) => {
 };
 
 const updateUserInfo = async (req: Request, res: Response) => {
-    let { userId, username } = req.body;
+    let { id, username } = req.body;
     username = sanitize(username);
     try {
         let message = '';
-        if (!userId) {
+        if (!id) {
             message = 'User not found';
             res.status(304).json(message);
             return;
@@ -137,7 +137,7 @@ const updateUserInfo = async (req: Request, res: Response) => {
             return;
         }
         const updatedUser = await User.findByIdAndUpdate(
-            userId,
+            id,
             {
                 username
             },
@@ -145,7 +145,7 @@ const updateUserInfo = async (req: Request, res: Response) => {
         );
         if (updatedUser) {
             const userInfo = {
-                userId: updatedUser._id,
+                id: updatedUser._id,
                 username: updatedUser.username
             };
             const token = createToken(userInfo);
@@ -164,14 +164,14 @@ const userSettings = async (req: Request, res: Response) => {
     let message = '';
     try {
         let {
-            userId,
+            id,
             newPassword,
             confirmPassword,
             currentPassword,
             username,
             bio
         } = req.body;
-        if (!userId) {
+        if (!id) {
             message = 'user details not provided';
             res.status(401).json(message);
             return;
@@ -181,7 +181,7 @@ const userSettings = async (req: Request, res: Response) => {
             res.status(401).json(message);
             return;
         }
-        const findUsr = await User.findById(userId);
+        const findUsr = await User.findById(id);
         if (!findUsr) {
             message = 'user not found';
             res.status(401).json(message);

@@ -1,7 +1,7 @@
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { Types } from 'mongoose';
 interface IUserInfo {
-    userId: Types.ObjectId,
+    id: Types.ObjectId,
     username: string
 }
 
