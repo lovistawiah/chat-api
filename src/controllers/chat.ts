@@ -66,7 +66,7 @@ const contacts = (socket: Socket) => {
 
                 if (chat) {
                     const oldFriend = {
-                        Id: friend._id,
+                        id: friend._id,
                         username: friend.username,
                         avatarUrl: friend.avatarUrl,
                         chatId: chat._id,
@@ -76,7 +76,7 @@ const contacts = (socket: Socket) => {
                     sendToReceiver(socket, chatEvents.contacts, oldFriend)
                 } else {
                     const newContact = {
-                        Id: friend._id,
+                        id: friend._id,
                         username: friend.username,
                         avatarUrl: friend.avatarUrl,
                         bio: friend.bio

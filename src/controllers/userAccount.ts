@@ -23,7 +23,6 @@ const signup = async (req: Request, res: Response) => {
         const sanitizedEmail = sanitize(email);
 
         const foundEmail = await emailExist(sanitizedEmail)
-        console.log(foundEmail)
         if (foundEmail) {
             message = "email exists"
             res.status(401).json(message)
