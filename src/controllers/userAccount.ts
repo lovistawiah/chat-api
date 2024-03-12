@@ -35,7 +35,7 @@ const signup = async (req: Request, res: Response) => {
             res.status(401).json(message);
             return;
         }
-        const uniqueUserName = await getUserNameFromEmail(email);
+        const uniqueUserName = await getUserNameFromEmail(sanitizedEmail);
         if (!uniqueUserName) {
             message = 'unknown error, try again!';
             res.status(400).json(message);

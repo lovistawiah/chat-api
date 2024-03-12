@@ -24,15 +24,15 @@ const authenticateSocket = async (socket: Socket, next: any) => {
             next(payload)
             return
         }
-        const userId: Schema.Types.ObjectId = payload.userInfo?.userId;
-        const findUser = await User.findById(userId);
+        const id: Schema.Types.ObjectId = payload.id;
+        const findUser = await User.findById(id);
         if (!findUser) {
             message = 'user does not exist';
             const err = new Error(message);
             next(err);
             return
         }
-        socket.data.userId = userId.toString();
+        socket.data.userId = id.toString();
         return next();
     } catch (err) {
         const message = mongooseError(err)
