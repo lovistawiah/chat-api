@@ -120,7 +120,7 @@ const login = async (req: Request, res: Response) => {
     }
 };
 
-const updateUserInfo = async (req: Request, res: Response) => {
+const updateUserName = async (req: Request, res: Response) => {
     let { id, username } = req.body;
     username = sanitize(username);
     try {
@@ -338,7 +338,7 @@ export {
     signup,
     login,
     typing,
-    updateUserInfo,
+    updateUserName,
     updateOfflineStatus,
     updateOnlineStatus,
     joinRooms,
