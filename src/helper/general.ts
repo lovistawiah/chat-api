@@ -24,7 +24,7 @@ const filterSocket = async (members: any[]) => {
     let filteredSocket: Array<RemoteSocket<any, any>> = []
     const sockets = await getSockets()
     members?.forEach((member) => {
-        filteredSocket = sockets.filter((sock) => sock.data.userId.toString() === member?.Id)
+        filteredSocket = sockets.filter((sock) => sock.data.userId.toString() === member?.id)
     })
     return filteredSocket
 }

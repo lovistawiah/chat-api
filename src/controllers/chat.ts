@@ -3,9 +3,9 @@ import { socketError } from '../ioInstance/socketError.js';
 import Chat, { PopulatedChatMembers } from '../models/Chat.js';
 import User from '../models/Users.js';
 import { chatEvents } from '../utils/index.js';
-import { MongooseError, Types, } from 'mongoose';
 import { findChatByMembers, findChatByUserId, findFriendsByUserId, sortChat } from '../helper/chat.js';
 import { sendToReceiver } from '../helper/socket.js';
+import { MongooseError, Types } from 'mongoose';
 
 const getChats = (socket: Socket) => {
     socket.on(chatEvents.chatLastMsg, async () => {
@@ -140,16 +140,19 @@ async function modifyMemsInfo(chatId: Types.ObjectId) {
                 path: 'members',
                 model: 'user'
             })
-            .select(['username', 'avatarUrl']);
+
         if (!chat) {
             errMsg = 'Chat not found';
             return errMsg;
         }
         return chat.members.map((member: any) => {
             return {
-                Id: member._id,
+                id: member.id,
                 username: member?.username,
-                avatarUrl: member?.avatarUrl
+                avatarUrl: member?.avatarUrl,
+                status: member?.lastSeen,
+                bio: member?.bio
+
             };
         });
     } catch (err) {

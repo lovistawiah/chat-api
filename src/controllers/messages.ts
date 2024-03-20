@@ -83,13 +83,13 @@ const onNewChat = (io: Server, socket: Socket) => {
 
                 modifiedMems.forEach((member) => {
                     for (const sock of filteredSocket) {
-                        if (sock.data.userId.toString() === member.Id.toString()) {
+                        if (sock.data.userId.toString() === member.id.toString()) {
 
                             // the co member of the logged in 
                             const coMember = filterMembers(modifiedMems, sock)
 
                             const newChat = {
-                                Id: msgCreated.chatId,
+                                id: msgCreated.chatId,
                                 ...coMember
                             };
 
@@ -166,7 +166,7 @@ const onDeleteMessage = async (socket: Socket, io: Server) => {
             }
 
             const message = {
-                Id: msgId,
+                id: msgId,
                 info: updatedMessage.info,
                 message:
                     updatedMessage.info !== 'deleted'

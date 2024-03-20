@@ -228,7 +228,7 @@ const userSettings = async (req: Request, res: Response) => {
         }
         message = 'user updated successfully';
         const userInfo = {
-            Id: findUsr._id,
+            id: findUsr._id,
             username: findUsr.username,
             bio: findUsr.bio
         };

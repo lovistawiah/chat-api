@@ -12,11 +12,11 @@ export interface IChat {
     createdAt: number,
     updatedAt: number
 }
-interface PopulatedMember {
+interface PopulatedMembers {
     members: Types.Array<IUser>
 }
 
-export type PopulatedChatMembers = PopulatedMember & IChat;
+export type PopulatedChatMembers = PopulatedMembers & IChat;
 
 
 
