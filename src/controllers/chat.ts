@@ -34,7 +34,7 @@ const getChats = (socket: Socket) => {
                             avatarUrl: member.avatarUrl,
                             lastMessage: lstMsgInfo?.message,
                             lstMsgDate: lstMsgInfo?.createdAt,
-                            repply: {
+                            reply: {
                                 id: lstMsgInfo?.reply?._id,
                                 message: lstMsgInfo?.reply?.message,
                                 sender: lstMsgInfo?.reply?.sender,
