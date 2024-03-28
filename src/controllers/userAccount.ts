@@ -20,8 +20,13 @@ const signup = async (req: Request, res: Response) => {
             res.status(400).json(message);
             return;
         }
-        const sanitizedEmail = sanitize(email);
+        if (password !== confirmPassword) {
+            message = 'passwords do not match';
+            res.status(401).json(message);
+            return;
+        }
 
+        const sanitizedEmail = sanitize(email);
         const foundEmail = await emailExist(sanitizedEmail)
         if (foundEmail) {
             message = "email exists"
@@ -29,17 +34,13 @@ const signup = async (req: Request, res: Response) => {
             return;
         }
 
-        if (password !== confirmPassword) {
-            message = 'passwords do not match';
-            res.status(401).json(message);
-            return;
-        }
         const uniqueUserName = await getUserNameFromEmail(sanitizedEmail);
         if (!uniqueUserName) {
             message = 'unknown error, try again!';
             res.status(400).json(message);
             return;
         }
+
         const defaultUrl = 'https://robohash.org/' + uniqueUserName;
         password = await bcrypt.hash(password, 10);
 

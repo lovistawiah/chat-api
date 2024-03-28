@@ -1,5 +1,6 @@
 import mongoose, { Schema, Types } from 'mongoose';
 import { IChat } from './Chat.js';
+
 export interface IUser {
     _id: Types.ObjectId,
     username: string,
