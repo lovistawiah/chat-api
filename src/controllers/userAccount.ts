@@ -305,9 +305,9 @@ const updateOfflineStatus = async (socket: Socket) => {
 };
 
 const typing = (socket: Socket) => {
-    socket.on(usrEvents.typing, async (data) => {
-        const { chatId } = data;
-        if (!chatId) return;
+    socket.on(usrEvents.typing, async (data: { chatId: string | undefined }) => {
+        const chatId = data?.chatId
+        if (!chatId) return
         socket
             .to(chatId.toString())
             .emit(usrEvents.typing, { chatId, typing: 'typing...' });
