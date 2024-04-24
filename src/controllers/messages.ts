@@ -62,7 +62,6 @@ const onNewChat = (io: Server, socket: Socket) => {
                 chatId = createdChat.chatId
                 chatMembers = createdChat.members
             }
-
             chatMembers?.forEach((mem) => {
                 if (!chatId) return
                 joinMemsToRoom(io, mem, chatId);
@@ -75,24 +74,22 @@ const onNewChat = (io: Server, socket: Socket) => {
             }
             const msgCreated = await createMessage(msgObj)
             if (!msgCreated) return
+
             const modifiedMems = await modifyMemsInfo(chatId);
-
-
             if (Array.isArray(modifiedMems)) {
                 const filteredSocket = await filterSocket(modifiedMems)
 
                 modifiedMems.forEach((member) => {
+                    console.log('here', member)
                     for (const sock of filteredSocket) {
                         if (sock.data.userId.toString() === member.id.toString()) {
-
                             // the co member of the logged in 
                             const coMember = filterMembers(modifiedMems, sock)
-
+                            console.log(coMember)
                             const newChat = {
                                 id: msgCreated.chatId,
                                 ...coMember
                             };
-
                             sendToReceiver(socket, msgEvents.newChat, { newChat, msgCreated })
                         }
                     }

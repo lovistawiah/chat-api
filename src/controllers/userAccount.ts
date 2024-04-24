@@ -59,13 +59,14 @@ const signup = async (req: Request, res: Response) => {
             res.status(401).json(message);
             return;
         }
+        const token = createToken({ id: user.id, username: user.username })
         const userInfo = {
             id: user.id,
             username: user.username,
             avatarUrl: user.avatarUrl,
             bio: user.bio
         };
-        res.status(200).json({ userInfo });
+        res.status(200).json({ userInfo, token });
     } catch (err) {
         const message = mongooseError(err)
         if (!message) return
